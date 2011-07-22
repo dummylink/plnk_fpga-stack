@@ -304,6 +304,12 @@ tEplDllkInitParam   DllkInitParam;
     {
         goto Exit;
     }
+
+    Ret = EplObdSetDefaultObdCallback(EplApiInstance_g.m_InitParam.m_pfnDefaultObdCallback);
+    if (Ret != kEplSuccessful)
+    {
+        goto Exit;
+    }
 #endif
 
 #if EPL_USE_SHAREDBUFF != FALSE
@@ -867,11 +873,17 @@ tEplKernel      Ret = kEplSuccessful;
     if (uiNodeId_p == 0
         || uiNodeId_p == EplObdGetNodeId())
     {   // local OD access can be performed
-    tEplObdSize     ObdSize;
+    tEplObdParam    ObdParam;
 
-        ObdSize = (tEplObdSize) *puiSize_p;
-        Ret = EplObdReadEntryToLe(uiIndex_p, uiSubindex_p, pDstData_le_p, &ObdSize);
-        *puiSize_p = (unsigned int) ObdSize;
+        EPL_MEMSET(&ObdParam, 0, sizeof (ObdParam));
+        ObdParam.m_SegmentSize = (tEplObdSize) *puiSize_p;
+        ObdParam.m_TransferSize = ObdParam.m_SegmentSize;
+        ObdParam.m_uiIndex = uiIndex_p;
+        ObdParam.m_uiSubIndex = uiSubindex_p;
+        ObdParam.m_pData = pDstData_le_p;
+
+        Ret = EplObdReadEntryToLe(&ObdParam);
+        *puiSize_p = (unsigned int) ObdParam.m_SegmentSize;
     }
     else
     {   // perform SDO transfer
@@ -971,8 +983,16 @@ tEplKernel      Ret = kEplSuccessful;
     if (uiNodeId_p == 0
         || uiNodeId_p == EplObdGetNodeId())
     {   // local OD access can be performed
+    tEplObdParam    ObdParam;
 
-        Ret = EplObdWriteEntryFromLe(uiIndex_p, uiSubindex_p, pSrcData_le_p, uiSize_p);
+        EPL_MEMSET(&ObdParam, 0, sizeof (ObdParam));
+        ObdParam.m_SegmentSize = (tEplObdSize) uiSize_p;
+        ObdParam.m_TransferSize = ObdParam.m_SegmentSize;
+        ObdParam.m_uiIndex = uiIndex_p;
+        ObdParam.m_uiSubIndex = uiSubindex_p;
+        ObdParam.m_pData = pSrcData_le_p;
+
+        Ret = EplObdWriteEntryFromLe(&ObdParam);
     }
     else
     {   // perform SDO transfer
@@ -2234,14 +2254,14 @@ BYTE                bTemp;
         goto Exit;
     }
 
-    if (EplApiInstance_g.m_InitParam.m_dwCycleLen != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwCycleLen != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1006, 0,
                         &EplApiInstance_g.m_InitParam.m_dwCycleLen,
                         4);
     }
 
-    if (EplApiInstance_g.m_InitParam.m_dwLossOfFrameTolerance != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwLossOfFrameTolerance != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1C14, 0,
                         &EplApiInstance_g.m_InitParam.m_dwLossOfFrameTolerance,
@@ -2249,7 +2269,7 @@ BYTE                bTemp;
     }
 
     // d.k. There is no dependance between FeatureFlags and async-only CN.
-    if (EplApiInstance_g.m_InitParam.m_dwFeatureFlags != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwFeatureFlags != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1F82, 0,
                                &EplApiInstance_g.m_InitParam.m_dwFeatureFlags,
@@ -2301,14 +2321,15 @@ BYTE                bTemp;
     }
 
 #if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)
-    if (EplApiInstance_g.m_InitParam.m_dwWaitSocPreq != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwWaitSocPreq != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1F8A, 1,
                                &EplApiInstance_g.m_InitParam.m_dwWaitSocPreq,
                                4);
     }
 
-    if ((EplApiInstance_g.m_InitParam.m_dwAsyncSlotTimeout != 0) && (EplApiInstance_g.m_InitParam.m_dwAsyncSlotTimeout != ~0UL))
+    if ((EplApiInstance_g.m_InitParam.m_dwAsyncSlotTimeout != 0)
+        && (EplApiInstance_g.m_InitParam.m_dwAsyncSlotTimeout != ~(DWORD)0))
     {
         Ret = EplObdWriteEntry(0x1F8A, 2,
                             &EplApiInstance_g.m_InitParam.m_dwAsyncSlotTimeout,
@@ -2317,35 +2338,35 @@ BYTE                bTemp;
 #endif
 
     // configure Identity
-    if (EplApiInstance_g.m_InitParam.m_dwDeviceType != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwDeviceType != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1000, 0,
                                &EplApiInstance_g.m_InitParam.m_dwDeviceType,
                                4);
     }
 
-    if (EplApiInstance_g.m_InitParam.m_dwVendorId != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwVendorId != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1018, 1,
                                &EplApiInstance_g.m_InitParam.m_dwVendorId,
                                4);
     }
 
-    if (EplApiInstance_g.m_InitParam.m_dwProductCode != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwProductCode != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1018, 2,
                                &EplApiInstance_g.m_InitParam.m_dwProductCode,
                                4);
     }
 
-    if (EplApiInstance_g.m_InitParam.m_dwRevisionNumber != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwRevisionNumber != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1018, 3,
                                &EplApiInstance_g.m_InitParam.m_dwRevisionNumber,
                                4);
     }
 
-    if (EplApiInstance_g.m_InitParam.m_dwSerialNumber != ~0UL)
+    if (EplApiInstance_g.m_InitParam.m_dwSerialNumber != ~(DWORD)0)
     {
         Ret = EplObdWriteEntry(0x1018, 4,
                                &EplApiInstance_g.m_InitParam.m_dwSerialNumber,

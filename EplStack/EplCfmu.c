@@ -257,7 +257,7 @@ tEplCfmuNodeInfo*   pNodeInfo;
         pNodeInfo = EPL_CFMU_GET_NODEINFO(uiNodeId);
         if (pNodeInfo != NULL)
         {
-            if (pNodeInfo->m_SdoComConHdl != ~0)
+            if (pNodeInfo->m_SdoComConHdl != ~0U)
             {
                 Ret = EplSdoComSdoAbort(pNodeInfo->m_SdoComConHdl, EPL_SDOAC_DATA_NOT_TRANSF_DUE_DEVICE_STATE);
             }
@@ -426,12 +426,22 @@ BOOL                fDoUpdate = FALSE;
     }
 
 #if (EPL_CFM_CONFIGURE_CYCLE_LENGTH != FALSE)
-    ObdSize = sizeof (EplCfmuInstance_g.m_le_dwCycleLength);
-    Ret = EplObduReadEntryToLe(0x1006, 0x00, &EplCfmuInstance_g.m_le_dwCycleLength, &ObdSize);
-    if (Ret != kEplSuccessful)
-    {   // local OD access failed
-        EPL_DBGLVL_CFM_TRACE1("Local OBD read failed %d\n", Ret);
-        goto Exit;
+    {
+    tEplObdParam    ObdParam;
+
+        EPL_MEMSET(&ObdParam, 0, sizeof (ObdParam));
+        ObdParam.m_SegmentSize = (tEplObdSize) sizeof (EplCfmuInstance_g.m_le_dwCycleLength);
+        ObdParam.m_TransferSize = ObdParam.m_SegmentSize;
+        ObdParam.m_uiIndex = 0x1006;
+        ObdParam.m_uiSubIndex = 0x00;
+        ObdParam.m_pData = &EplCfmuInstance_g.m_le_dwCycleLength;
+
+        Ret = EplObdReadEntryToLe(&ObdParam);
+        if (Ret != kEplSuccessful)
+        {   // local OD access failed
+            EPL_DBGLVL_CFM_TRACE1("Local OBD read failed %d\n", Ret);
+            goto Exit;
+        }
     }
 #endif
 
@@ -469,8 +479,10 @@ BOOL                fDoUpdate = FALSE;
         pNodeInfo->m_EventCnProgress.m_dwTotalNumberOfBytes += sizeof (dw_le_Signature);
         AmiSetDwordToLe(&dw_le_Signature, 0x64616F6C);
         //Restore Default Parameters
-        EPL_DBGLVL_CFM_TRACE3("CN%x - Cfg Mismatch | MN Expects: %lx-%lx ", uiNodeId_p, dwExpConfDate, dwExpConfTime);
-        EPL_DBGLVL_CFM_TRACE2("CN Has: %lx-%lx. Restoring Default...\n", AmiGetDwordFromLe(&pIdentResponse->m_le_dwVerifyConfigurationDate), AmiGetDwordFromLe(&pIdentResponse->m_le_dwVerifyConfigurationTime));
+        EPL_DBGLVL_CFM_TRACE3("CN%x - Cfg Mismatch | MN Expects: %lx-%lx ", uiNodeId_p, (unsigned long) dwExpConfDate, (unsigned long) dwExpConfTime);
+        EPL_DBGLVL_CFM_TRACE2("CN Has: %lx-%lx. Restoring Default...\n",
+                (unsigned long) AmiGetDwordFromLe(&pIdentResponse->m_le_dwVerifyConfigurationDate),
+                (unsigned long) AmiGetDwordFromLe(&pIdentResponse->m_le_dwVerifyConfigurationTime));
 
         pNodeInfo->m_EventCnProgress.m_uiObjectIndex = 0x1011;
         pNodeInfo->m_EventCnProgress.m_uiObjectSubIndex = 0x01;
@@ -564,7 +576,7 @@ BYTE*                   pbBuffer;
     // abort any running SDO transfer
     pNodeInfo = EPL_CFMU_GET_NODEINFO(pParam_p->m_uiSubIndex);
     if ((pNodeInfo != NULL)
-        && (pNodeInfo->m_SdoComConHdl != ~0))
+        && (pNodeInfo->m_SdoComConHdl != ~0U))
     {
         Ret = EplSdoComSdoAbort(pNodeInfo->m_SdoComConHdl, EPL_SDOAC_DATA_NOT_TRANSF_DUE_DEVICE_STATE);
     }
@@ -871,6 +883,8 @@ tEplKernel      Ret = kEplSuccessful;
     {
         EPL_DBGLVL_CFM_TRACE2("CN%x Writing 0x1006 returns 0x%X\n", pNodeInfo_p->m_EventCnProgress.m_uiNodeId, Ret);
     }
+#else
+    UNUSED_PARAMETER(pNodeInfo_p);
 #endif
 
     return Ret;
@@ -1008,7 +1022,7 @@ tEplSdoComTransParamByIndex TransParamByIndex;
         goto Exit;
     }
 
-    if (pNodeInfo_p->m_SdoComConHdl == ~0)
+    if (pNodeInfo_p->m_SdoComConHdl == ~0U)
     {
         // init command layer connection
         Ret = EplSdoComDefineCon(&pNodeInfo_p->m_SdoComConHdl,

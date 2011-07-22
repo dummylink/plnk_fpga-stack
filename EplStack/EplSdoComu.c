@@ -250,6 +250,8 @@ static tEplKernel EplSdoComServerSendFrameIntern(tEplSdoComCon*     pSdoComCon_p
 
 static tEplKernel EplSdoComServerInitWriteByIndex(tEplSdoComCon*     pSdoComCon_p,
                                          tEplAsySdoCom*     pAsySdoCom_p);
+
+static tEplKernel PUBLIC EplSdoComServerCbExpeditedWriteFinished(tEplObdParam* pObdParam_p);
 #endif
 
 
@@ -1120,7 +1122,6 @@ tEplSdoComCon*      pSdoComCon;
 BYTE                bFlag;
 
 #if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_SDOS)) != 0)
-DWORD               dwAbortCode;
 unsigned int        uiSize;
 #endif
 
@@ -1227,10 +1228,8 @@ unsigned int        uiSize;
                                 default:
                                 {
                                     //  unsupported command
-                                    //       -> abort senden
-                                    dwAbortCode = EPL_SDOAC_UNKNOWN_COMMAND_SPECIFIER;
                                     // send abort
-                                    pSdoComCon->m_pData = (BYTE*)&dwAbortCode;
+                                    pSdoComCon->m_dwLastAbortCode = EPL_SDOAC_UNKNOWN_COMMAND_SPECIFIER;
                                     Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
                                                                 0,
                                                                 0,
@@ -1286,7 +1285,8 @@ unsigned int        uiSize;
                 case kEplSdoComConEventFrameSended:
                 {
                     // check if it is a read
-                    if(pSdoComCon->m_SdoServiceType == kEplSdoServiceReadByIndex)
+                    if ((pSdoComCon->m_SdoTransType != kEplSdoTransExpedited)
+                        && (pSdoComCon->m_SdoServiceType == kEplSdoServiceReadByIndex))
                     {
                         // send next frame
                         EplSdoComServerSendFrameIntern(pSdoComCon,
@@ -1331,11 +1331,47 @@ unsigned int        uiSize;
                         // check if it is a write
                         if (pSdoComCon->m_SdoServiceType == kEplSdoServiceWriteByIndex)
                         {
-                            // write data to OD
+                        tEplObdParam    ObdParam;
+                        tEplSdoAddress  SdoAddress;
+
                             uiSize = AmiGetWordFromLe(&pAsySdoCom_p->m_le_wSegmentSize);
-                            if (uiSize > pSdoComCon->m_uiTransSize)
+
+                            // $$$ check end of transfer
+                            //if ((pAsySdoCom_p->m_le_bFlags & 0x30) == 0x30)
+
+                            EPL_MEMSET(&SdoAddress, 0, sizeof (SdoAddress));
+                            SdoAddress.m_SdoAddrType = kEplSdoAddrTypeNodeId;
+                            SdoAddress.m_uiNodeId = pSdoComCon->m_uiNodeId;
+
+                            EPL_MEMSET(&ObdParam, 0, sizeof (ObdParam));
+                            ObdParam.m_SegmentSize = (tEplObdSize) uiSize;
+                            ObdParam.m_TransferSize = (tEplObdSize) pSdoComCon->m_uiTransSize;
+                            ObdParam.m_SegmentOffset = (tEplObdSize) pSdoComCon->m_pData;
+                            ObdParam.m_uiIndex = pSdoComCon->m_uiTargetIndex;
+                            ObdParam.m_uiSubIndex = pSdoComCon->m_uiTargetSubIndex;
+                            ObdParam.m_pData = &pAsySdoCom_p->m_le_abCommandData[0];
+                            ObdParam.m_pHandle = pSdoComCon;
+                            ObdParam.m_pfnAccessFinished = EplSdoComServerCbExpeditedWriteFinished;
+                            ObdParam.m_pRemoteAddress = &SdoAddress;
+
+                            pSdoComCon->m_pData += uiSize;
+
+                            Ret = EplObdWriteEntryFromLe(&ObdParam);
+                            if (Ret == kEplObdAccessAdopted)
                             {
-                                pSdoComCon->m_dwLastAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_TOO_HIGH;
+                                Ret = kEplSuccessful;
+                                goto Exit;
+                            }
+                            else if (Ret != kEplSuccessful)
+                            {
+                                if (ObdParam.m_dwAbortCode != 0)
+                                {
+                                    pSdoComCon->m_dwLastAbortCode = ObdParam.m_dwAbortCode;
+                                }
+                                else
+                                {
+                                    pSdoComCon->m_dwLastAbortCode = EPL_SDOAC_GENERAL_ERROR;
+                                }
                                 // send abort
                                 Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
                                                             0,
@@ -1343,52 +1379,23 @@ unsigned int        uiSize;
                                                             kEplSdoComSendTypeAbort);
                                 goto Exit;
                             }
-                            if (pSdoComCon->m_dwLastAbortCode == 0)
-                            {
-                                EPL_MEMCPY(pSdoComCon->m_pData, &pAsySdoCom_p->m_le_abCommandData[0],uiSize);
-                                (pSdoComCon->m_pData) += uiSize;
-                            }
-                            // update counter
+
+                            // update internal counters
                             pSdoComCon->m_uiTransferredByte += uiSize;
                             pSdoComCon->m_uiTransSize -= uiSize;
 
-                            // check end of transfer
-                            if((pAsySdoCom_p->m_le_bFlags & 0x30) == 0x30)
-                            {   // transfer ready
-                                pSdoComCon->m_uiTransSize = 0;
-
-                                if(pSdoComCon->m_dwLastAbortCode == 0)
-                                {
-                                    // send response
-                                    // send next frame
-                                    EplSdoComServerSendFrameIntern(pSdoComCon,
-                                                                        0,
-                                                                        0,
-                                                                        kEplSdoComSendTypeRes);
-                                    // if all send -> back to idle
-                                    if(pSdoComCon->m_uiTransSize == 0)
-                                    {   // back to idle
-                                        pSdoComCon->m_SdoComState = kEplSdoComStateIdle;
-                                        // reset abort code
-                                        pSdoComCon->m_dwLastAbortCode = 0;
-                                    }
-                                }
-                                else
-                                {   // send dabort code
-                                    // send abort
-                                    pSdoComCon->m_pData = (BYTE*)&pSdoComCon->m_dwLastAbortCode;
-                                    Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
+                            if (pSdoComCon->m_uiTransSize == 0)
+                            {   // transfer finished
+                                // send command acknowledge
+                                Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
                                                                 0,
                                                                 0,
-                                                                kEplSdoComSendTypeAbort);
+                                                                kEplSdoComSendTypeAckRes);
 
-                                    // reset abort code
-                                    pSdoComCon->m_dwLastAbortCode = 0;
-
-                                }
+                                pSdoComCon->m_SdoComState = kEplSdoComStateIdle;
                             }
                             else
-                            {
+                            {   // segmented transfer has not completed yet
                                 // send acknowledge without any Command layer data
                                 Ret = EplSdoAsySeqSendData(pSdoComCon->m_SdoSeqConHdl,
                                                                         0,
@@ -1925,11 +1932,6 @@ static tEplKernel EplSdoComServerInitReadByIndex(tEplSdoComCon*     pSdoComCon_p
 tEplKernel      Ret;
 unsigned int    uiIndex;
 unsigned int    uiSubindex;
-tEplObdSize     EntrySize;
-tEplObdAccess   AccessType;
-DWORD           dwAbortCode;
-
-    dwAbortCode = 0;
 
     // a init of a read could not be a segmented transfer
     // -> no variable part of header
@@ -1938,89 +1940,118 @@ DWORD           dwAbortCode;
     uiIndex = AmiGetWordFromLe(&pAsySdoCom_p->m_le_abCommandData[0]);
     uiSubindex = AmiGetByteFromLe(&pAsySdoCom_p->m_le_abCommandData[2]);
 
-    // check accesstype of entry
-    // existens of entry
-    Ret = EplObduGetAccessType(uiIndex, uiSubindex, &AccessType);
-    if(Ret == kEplObdSubindexNotExist)
-    {   // subentry doesn't exist
-        dwAbortCode = EPL_SDOAC_SUB_INDEX_NOT_EXIST;
-        // send abort
-        pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
-        Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
-                                    kEplSdoComSendTypeAbort);
-        goto Exit;
-    }
-    else if(Ret != kEplSuccessful)
-    {   // entry doesn't exist
-        dwAbortCode = EPL_SDOAC_OBJECT_NOT_EXIST;
-        // send abort
-        pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
-        Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
-                                    kEplSdoComSendTypeAbort);
-        goto Exit;
-    }
-
-    // compare accesstype must be read or const
-    if(((AccessType & kEplObdAccRead) == 0)
-        && ((AccessType & kEplObdAccConst) == 0))
-    {
-
-        if((AccessType & kEplObdAccWrite) != 0)
-        {
-            // entry read a write only object
-            dwAbortCode = EPL_SDOAC_READ_TO_WRITE_ONLY_OBJ;
-        }
-        else
-        {
-            dwAbortCode = EPL_SDOAC_UNSUPPORTED_ACCESS;
-        }
-        // send abort
-        pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
-        Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
-                                    kEplSdoComSendTypeAbort);
-        goto Exit;
-    }
-
     // save service
     pSdoComCon_p->m_SdoServiceType = kEplSdoServiceReadByIndex;
 
-    // get size of object to see iof segmented or expedited transfer
-    EntrySize = EplObduGetDataSize(uiIndex, uiSubindex);
-    if(EntrySize > EPL_SDO_MAX_SEGMENT_SIZE)
-    {   // segmented transfer
-        pSdoComCon_p->m_SdoTransType = kEplSdoTransSegmented;
-        // get pointer to object-entry data
-        pSdoComCon_p->m_pData = EplObduGetObjectDataPtr(uiIndex, uiSubindex);
-    }
-    else
-    {   // expedited transfer
-        pSdoComCon_p->m_SdoTransType = kEplSdoTransExpedited;
-    }
+    pSdoComCon_p->m_SdoTransType = kEplSdoTransExpedited;
 
-    pSdoComCon_p->m_uiTransSize = EntrySize;
+    pSdoComCon_p->m_uiTransSize = EPL_SDO_MAX_SEGMENT_SIZE - 4;
     pSdoComCon_p->m_uiTransferredByte = 0;
 
     Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
                                     uiIndex,
                                     uiSubindex,
                                     kEplSdoComSendTypeRes);
-    if(Ret != kEplSuccessful)
+    if (Ret != kEplSuccessful)
     {
         // error -> abort
-        dwAbortCode = EPL_SDOAC_GENERAL_ERROR;
+        pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_GENERAL_ERROR;
         // send abort
-        pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
         Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
                                     uiIndex,
                                     uiSubindex,
                                     kEplSdoComSendTypeAbort);
         goto Exit;
+    }
+
+Exit:
+    return Ret;
+}
+#endif
+
+//---------------------------------------------------------------------------
+//
+// Function:    EplSdoComServerCbExpeditedReadFinished();
+//
+// Description: function is called by the adopter of the OD read access
+//
+// Parameters:  pObdParam_p     = pointer to OBD parameter structure
+//
+// Returns:     tEplKernel  =  errorcode
+//
+// State:
+//
+//---------------------------------------------------------------------------
+#if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_SDOS)) != 0)
+static tEplKernel PUBLIC EplSdoComServerCbExpeditedReadFinished(tEplObdParam* pObdParam_p)
+{
+tEplKernel      Ret;
+tEplSdoComCon*  pSdoComCon;
+BYTE            abFrame[EPL_MAX_SDO_FRAME_SIZE];
+tEplFrame*      pFrame;
+tEplAsySdoCom*  pCommandFrame;
+unsigned int    uiSizeOfFrame;
+BYTE            bFlag;
+
+    Ret = kEplSuccessful;
+
+    pSdoComCon = pObdParam_p->m_pHandle;
+
+    if (pObdParam_p->m_dwAbortCode != 0)
+    {
+        // send abort
+        pSdoComCon->m_dwLastAbortCode = pObdParam_p->m_dwAbortCode;
+        Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
+                                    pObdParam_p->m_uiIndex,
+                                    pObdParam_p->m_uiSubIndex,
+                                    kEplSdoComSendTypeAbort);
+
+        pSdoComCon->m_SdoComState = kEplSdoComStateIdle;
+        goto Exit;
+    }
+
+    pFrame = (tEplFrame*)&abFrame[0];
+
+    EPL_MEMSET(&abFrame[0], 0x00, sizeof(abFrame));
+
+    // build generic part of frame
+    // get pointer to command layerpart of frame
+    pCommandFrame = &pFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_abSdoSeqPayload;
+    AmiSetByteToLe(&pCommandFrame->m_le_bCommandId, pSdoComCon->m_SdoServiceType);
+    AmiSetByteToLe(&pCommandFrame->m_le_bTransactionId, pSdoComCon->m_bTransactionId);
+
+    // set size to header size
+    uiSizeOfFrame = 8;
+
+    // set response flag
+    bFlag = AmiGetByteFromLe( &pCommandFrame->m_le_bFlags);
+    bFlag |= 0x80;
+    AmiSetByteToLe(&pCommandFrame->m_le_bFlags,  bFlag);
+
+    // check type of resonse
+    if (pSdoComCon->m_SdoTransType == kEplSdoTransExpedited)
+    {   // Expedited transfer
+        // copy data to frame
+        EPL_MEMCPY(&pCommandFrame->m_le_abCommandData[0], pObdParam_p->m_pData, pObdParam_p->m_SegmentSize);
+
+        // set size of frame
+        pSdoComCon->m_uiTransSize = pObdParam_p->m_SegmentSize;
+        AmiSetWordToLe(&pCommandFrame->m_le_wSegmentSize, (WORD) pSdoComCon->m_uiTransSize);
+
+        // correct byte-counter
+        uiSizeOfFrame += pSdoComCon->m_uiTransSize;
+        pSdoComCon->m_uiTransferredByte += pSdoComCon->m_uiTransSize;
+        pSdoComCon->m_uiTransSize = 0;
+
+
+        // send frame
+        uiSizeOfFrame += pSdoComCon->m_uiTransSize;
+        Ret = EplSdoAsySeqSendData(pSdoComCon->m_SdoSeqConHdl,
+                                    uiSizeOfFrame,
+                                    pFrame);
+
+        pSdoComCon->m_SdoComState = kEplSdoComStateIdle;
+        pSdoComCon->m_uiTransSize = 0;
     }
 
 Exit:
@@ -2101,7 +2132,7 @@ BYTE            bFlag;
             break;
         }
 
-        // responsframe to send
+        // responseframe to send
         case kEplSdoComSendTypeRes:
         {
             // set response flag
@@ -2109,35 +2140,99 @@ BYTE            bFlag;
             bFlag |= 0x80;
             AmiSetByteToLe(&pCommandFrame->m_le_bFlags,  bFlag);
 
-            // check type of resonse
-            if(pSdoComCon_p->m_SdoTransType == kEplSdoTransExpedited)
+            // check type of response
+            if (pSdoComCon_p->m_SdoTransType == kEplSdoTransExpedited)
             {   // Expedited transfer
-                // copy data in frame
-                Ret = EplObduReadEntryToLe(uiIndex_p,
-                                        uiSubIndex_p,
-                                        &pCommandFrame->m_le_abCommandData[0],
-                                        (tEplObdSize*)&pSdoComCon_p->m_uiTransSize);
-                if(Ret != kEplSuccessful)
+            tEplObdParam    ObdParam;
+            tEplSdoAddress  SdoAddress;
+
+                // read object from OD with destination buffer points to frame
+
+                EPL_MEMSET(&SdoAddress, 0, sizeof (SdoAddress));
+                SdoAddress.m_SdoAddrType = kEplSdoAddrTypeNodeId;
+                SdoAddress.m_uiNodeId = pSdoComCon_p->m_uiNodeId;
+
+                EPL_MEMSET(&ObdParam, 0, sizeof (ObdParam));
+                ObdParam.m_SegmentSize = (tEplObdSize) pSdoComCon_p->m_uiTransSize;
+                ObdParam.m_TransferSize = 0;
+                ObdParam.m_uiIndex = uiIndex_p;
+                ObdParam.m_uiSubIndex = uiSubIndex_p;
+                ObdParam.m_pData = &pCommandFrame->m_le_abCommandData[0];
+                ObdParam.m_pHandle = pSdoComCon_p;
+                ObdParam.m_pfnAccessFinished = EplSdoComServerCbExpeditedReadFinished;
+                ObdParam.m_pRemoteAddress = &SdoAddress;
+
+                Ret = EplObdReadEntryToLe(&ObdParam);
+                if (Ret == kEplObdAccessAdopted)
                 {
+                    //Ret = kEplSuccessful;
+                    // send acknowledge without any Command layer data
+                    Ret = EplSdoAsySeqSendData(pSdoComCon_p->m_SdoSeqConHdl,
+                                                            0,
+                                                            (tEplFrame*)NULL);
+                    goto Exit;
+                }
+                else if (Ret != kEplSuccessful)
+                {
+                    // send abort
+                    pSdoComCon_p->m_dwLastAbortCode = ObdParam.m_dwAbortCode;
+                    Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
+                                                uiIndex_p,
+                                                uiSubIndex_p,
+                                                kEplSdoComSendTypeAbort);
                     goto Exit;
                 }
 
-                // set size of frame
-                AmiSetWordToLe(&pCommandFrame->m_le_wSegmentSize, (WORD) pSdoComCon_p->m_uiTransSize);
+                if (ObdParam.m_SegmentSize < ObdParam.m_TransferSize)
+                {   // the transfer is in fact a segmented transfer
+                    pSdoComCon_p->m_SdoTransType = kEplSdoTransSegmented;
+                    pSdoComCon_p->m_pData = EplObduGetObjectDataPtr(uiIndex_p, uiSubIndex_p);
 
-                // correct byte-counter
-                uiSizeOfFrame += pSdoComCon_p->m_uiTransSize;
-                pSdoComCon_p->m_uiTransferredByte += pSdoComCon_p->m_uiTransSize;
-                pSdoComCon_p->m_uiTransSize = 0;
+                    pSdoComCon_p->m_uiTransSize = ObdParam.m_TransferSize;
 
+                    // set init flag
+                    bFlag = AmiGetByteFromLe( &pCommandFrame->m_le_bFlags);
+                    bFlag |= 0x10;
+                    AmiSetByteToLe(&pCommandFrame->m_le_bFlags,  bFlag);
+                    // init data size in variable header, which includes itself
+                    AmiSetDwordToLe(&pCommandFrame->m_le_abCommandData[0],
+                                    pSdoComCon_p->m_uiTransSize + 4);
 
-                // send frame
-                uiSizeOfFrame += pSdoComCon_p->m_uiTransSize;
+                    // correct byte-counter
+                    pSdoComCon_p->m_uiTransSize -= ObdParam.m_SegmentSize;
+                    pSdoComCon_p->m_uiTransferredByte += ObdParam.m_SegmentSize;
+
+                    // move data pointer
+                    pSdoComCon_p->m_pData += ObdParam.m_SegmentSize;
+
+                    // set segment size
+                    AmiSetWordToLe(&pCommandFrame->m_le_wSegmentSize, (WORD) (ObdParam.m_SegmentSize + 4));
+
+                    // send frame
+                    uiSizeOfFrame += ObdParam.m_SegmentSize + 4;
+                }
+                else
+                {
+                    pSdoComCon_p->m_uiTransSize = ObdParam.m_SegmentSize;
+
+                    // set size of frame
+                    AmiSetWordToLe(&pCommandFrame->m_le_wSegmentSize, (WORD) pSdoComCon_p->m_uiTransSize);
+
+                    // correct byte-counter
+                    uiSizeOfFrame += pSdoComCon_p->m_uiTransSize;
+                    pSdoComCon_p->m_uiTransferredByte += pSdoComCon_p->m_uiTransSize;
+                    pSdoComCon_p->m_uiTransSize = 0;
+
+                    // send frame
+                    uiSizeOfFrame += pSdoComCon_p->m_uiTransSize;
+                }
+
                 Ret = EplSdoAsySeqSendData(pSdoComCon_p->m_SdoSeqConHdl,
                                             uiSizeOfFrame,
                                             pFrame);
+
             }
-            else if(pSdoComCon_p->m_SdoTransType == kEplSdoTransSegmented)
+            else if (pSdoComCon_p->m_SdoTransType == kEplSdoTransSegmented)
             {   // segmented transfer
                 // distinguish between init, segment and complete
                 if(pSdoComCon_p->m_uiTransferredByte == 0)
@@ -2239,7 +2334,7 @@ BYTE            bFlag;
             AmiSetByteToLe(&pCommandFrame->m_le_bFlags,  bFlag);
 
             // copy abortcode to frame
-            AmiSetDwordToLe(&pCommandFrame->m_le_abCommandData[0], *((DWORD*)pSdoComCon_p->m_pData));
+            AmiSetDwordToLe(&pCommandFrame->m_le_abCommandData[0], pSdoComCon_p->m_dwLastAbortCode);
 
             // set size of segment
             AmiSetWordToLe(&pCommandFrame->m_le_wSegmentSize, sizeof(DWORD));
@@ -2261,6 +2356,73 @@ Exit:
     return Ret;
 }
 #endif
+
+//---------------------------------------------------------------------------
+//
+// Function:    EplSdoComServerCbExpeditedWriteFinished();
+//
+// Description: function is called by the adopter of the OD write access
+//
+// Parameters:  pObdParam_p     = pointer to OBD parameter structure
+//
+// Returns:     tEplKernel  =  errorcode
+//
+// State:
+//
+//---------------------------------------------------------------------------
+#if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_SDOS)) != 0)
+static tEplKernel PUBLIC EplSdoComServerCbExpeditedWriteFinished(tEplObdParam* pObdParam_p)
+{
+tEplKernel      Ret;
+tEplSdoComCon*  pSdoComCon;
+
+    Ret = kEplSuccessful;
+
+    pSdoComCon = pObdParam_p->m_pHandle;
+
+    if (pObdParam_p->m_dwAbortCode != 0)
+    {
+        // send abort
+        pSdoComCon->m_dwLastAbortCode = pObdParam_p->m_dwAbortCode;
+        Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
+                                    pObdParam_p->m_uiIndex,
+                                    pObdParam_p->m_uiSubIndex,
+                                    kEplSdoComSendTypeAbort);
+
+        pSdoComCon->m_SdoComState = kEplSdoComStateIdle;
+    }
+    else
+    {
+
+        // update internal counters
+        pSdoComCon->m_uiTransferredByte = pObdParam_p->m_SegmentSize;
+        pSdoComCon->m_uiTransSize -= pObdParam_p->m_SegmentSize;
+
+        if (pSdoComCon->m_uiTransSize == 0)
+        {   // transfer finished
+            // send command acknowledge
+            Ret = EplSdoComServerSendFrameIntern(pSdoComCon,
+                                            0,
+                                            0,
+                                            kEplSdoComSendTypeAckRes);
+
+            pSdoComCon->m_SdoComState = kEplSdoComStateIdle;
+        }
+        else
+        {   // segmented transfer has not completed yet
+            // send acknowledge without any Command layer data
+            Ret = EplSdoAsySeqSendData(pSdoComCon->m_SdoSeqConHdl,
+                                                    0,
+                                                    (tEplFrame*)NULL);
+        }
+    }
+
+//Exit:
+    return Ret;
+}
+#endif
+
+
 //---------------------------------------------------------------------------
 //
 // Function:        EplSdoComServerInitWriteByIndex
@@ -2283,15 +2445,10 @@ static tEplKernel EplSdoComServerInitWriteByIndex(tEplSdoComCon*     pSdoComCon_
                                          tEplAsySdoCom*     pAsySdoCom_p)
 {
 tEplKernel  Ret = kEplSuccessful;
-unsigned int    uiIndex;
-unsigned int    uiSubindex;
-unsigned int    uiBytesToTransfer;
-tEplObdSize     EntrySize;
-tEplObdAccess   AccessType;
-DWORD           dwAbortCode;
+unsigned int    uiSegmentSize;
 BYTE*           pbSrcData;
-
-    dwAbortCode = 0;
+tEplObdParam    ObdParam;
+tEplSdoAddress  SdoAddress;
 
     // a init of a write
     // -> variable part of header possible
@@ -2301,8 +2458,8 @@ BYTE*           pbSrcData;
     {   // initiate segmented transfer
         pSdoComCon_p->m_SdoTransType = kEplSdoTransSegmented;
         // get index and subindex
-        uiIndex = AmiGetWordFromLe(&pAsySdoCom_p->m_le_abCommandData[4]);
-        uiSubindex = AmiGetByteFromLe(&pAsySdoCom_p->m_le_abCommandData[6]);
+        pSdoComCon_p->m_uiTargetIndex = AmiGetWordFromLe(&pAsySdoCom_p->m_le_abCommandData[4]);
+        pSdoComCon_p->m_uiTargetSubIndex = AmiGetByteFromLe(&pAsySdoCom_p->m_le_abCommandData[6]);
         // get source-pointer for copy
         pbSrcData = &pAsySdoCom_p->m_le_abCommandData[8];
         // save size
@@ -2310,13 +2467,16 @@ BYTE*           pbSrcData;
         // subtract header
         pSdoComCon_p->m_uiTransSize -= 8;
 
+        uiSegmentSize = AmiGetWordFromLe(&pAsySdoCom_p->m_le_wSegmentSize);
+        // eleminate header (variable part/data size (4) + Command header/Index+sub-index (4))
+        uiSegmentSize -= 8;
     }
     else if ((pAsySdoCom_p->m_le_bFlags & 0x30) == 0x00)
     {   // expedited transfer
         pSdoComCon_p->m_SdoTransType = kEplSdoTransExpedited;
         // get index and subindex
-        uiIndex = AmiGetWordFromLe(&pAsySdoCom_p->m_le_abCommandData[0]);
-        uiSubindex = AmiGetByteFromLe(&pAsySdoCom_p->m_le_abCommandData[2]);
+        pSdoComCon_p->m_uiTargetIndex = AmiGetWordFromLe(&pAsySdoCom_p->m_le_abCommandData[0]);
+        pSdoComCon_p->m_uiTargetSubIndex = AmiGetByteFromLe(&pAsySdoCom_p->m_le_abCommandData[2]);
         // get source-pointer for copy
         pbSrcData = &pAsySdoCom_p->m_le_abCommandData[4];
         // save size
@@ -2324,6 +2484,7 @@ BYTE*           pbSrcData;
         // subtract header
         pSdoComCon_p->m_uiTransSize -= 4;
 
+        uiSegmentSize = pSdoComCon_p->m_uiTransSize;
     }
     else
     {
@@ -2331,187 +2492,84 @@ BYTE*           pbSrcData;
         goto Exit;
     }
 
-    // check accesstype of entry
-    // existens of entry
-    Ret = EplObduGetAccessType(uiIndex, uiSubindex, &AccessType);
-    if (Ret == kEplObdSubindexNotExist)
-    {   // subentry doesn't exist
-        pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_SUB_INDEX_NOT_EXIST;
-        // send abort
-        // d.k. This is wrong: k.t. not needed send abort on end of write
-        /*pSdoComCon_p->m_pData = (BYTE*)pSdoComCon_p->m_dwLastAbortCode;
-        Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
-                                    kEplSdoComSendTypeAbort);*/
-        goto Abort;
-    }
-    else if(Ret != kEplSuccessful)
-    {   // entry doesn't exist
-        pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_OBJECT_NOT_EXIST;
-        // send abort
-        // d.k. This is wrong: k.t. not needed send abort on end of write
-        /*
-        pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
-        Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
-                                    kEplSdoComSendTypeAbort);*/
-        goto Abort;
-    }
-
-    // compare accesstype must be read
-    if((AccessType & kEplObdAccWrite) == 0)
-    {
-
-        if((AccessType & kEplObdAccRead) != 0)
-        {
-            // entry write a read only object
-            pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_WRITE_TO_READ_ONLY_OBJ;
-        }
-        else
-        {
-            pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_UNSUPPORTED_ACCESS;
-        }
-        // send abort
-        // d.k. This is wrong: k.t. not needed send abort on end of write
-        /*pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
-        Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
-                                    kEplSdoComSendTypeAbort);*/
-        goto Abort;
-    }
-
     // save service
     pSdoComCon_p->m_SdoServiceType = kEplSdoServiceWriteByIndex;
 
     pSdoComCon_p->m_uiTransferredByte = 0;
 
-    // write data to OD
-    if(pSdoComCon_p->m_SdoTransType == kEplSdoTransExpedited)
-    {   // expedited transfer
-        // size checking is done by EplObduWriteEntryFromLe()
+    EPL_MEMSET(&SdoAddress, 0, sizeof (SdoAddress));
+    SdoAddress.m_SdoAddrType = kEplSdoAddrTypeNodeId;
+    SdoAddress.m_uiNodeId = pSdoComCon_p->m_uiNodeId;
 
-        Ret = EplObduWriteEntryFromLe(uiIndex,
-                                    uiSubindex,
-                                    pbSrcData,
-                                    pSdoComCon_p->m_uiTransSize);
-        switch (Ret)
+    EPL_MEMSET(&ObdParam, 0, sizeof (ObdParam));
+    ObdParam.m_SegmentSize = (tEplObdSize) uiSegmentSize;
+    ObdParam.m_TransferSize = (tEplObdSize) pSdoComCon_p->m_uiTransSize;
+    ObdParam.m_uiIndex = pSdoComCon_p->m_uiTargetIndex;
+    ObdParam.m_uiSubIndex = pSdoComCon_p->m_uiTargetSubIndex;
+    ObdParam.m_pData = pbSrcData;
+    ObdParam.m_pHandle = pSdoComCon_p;
+    ObdParam.m_pfnAccessFinished = EplSdoComServerCbExpeditedWriteFinished;
+    ObdParam.m_pRemoteAddress = &SdoAddress;
+
+    // save next offset in m_pData for later use in case of segmented transfer
+    pSdoComCon_p->m_pData = (BYTE*) uiSegmentSize;
+
+    Ret = EplObdWriteEntryFromLe(&ObdParam);
+    if (Ret == kEplObdAccessAdopted)
+    {
+        Ret = kEplSuccessful;
+        if (pSdoComCon_p->m_SdoTransType == kEplSdoTransExpedited)
         {
-            case kEplSuccessful:
-            {
-                break;
-            }
-
-            case kEplObdAccessViolation:
-            {
-                pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_UNSUPPORTED_ACCESS;
-                // send abort
-                goto Abort;
-            }
-
-            case kEplObdValueLengthError:
-            {
-                pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_NOT_MATCH;
-                // send abort
-                goto Abort;
-            }
-
-            case kEplObdValueTooHigh:
-            {
-                pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_VALUE_RANGE_TOO_HIGH;
-                // send abort
-                goto Abort;
-            }
-
-            case kEplObdValueTooLow:
-            {
-                pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_VALUE_RANGE_TOO_LOW;
-                // send abort
-                goto Abort;
-            }
-
-            default:
-            {
-                pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_GENERAL_ERROR;
-                // send abort
-                goto Abort;
-            }
+            // send sequence layer acknowledge, because of expedited transfer
+            Ret = EplSdoAsySeqSendData(pSdoComCon_p->m_SdoSeqConHdl,
+                                                    0,
+                                                    (tEplFrame*)NULL);
         }
+        goto Exit;
+    }
+    else if (Ret != kEplSuccessful)
+    {
+        if (ObdParam.m_dwAbortCode != 0)
+        {
+            pSdoComCon_p->m_dwLastAbortCode = ObdParam.m_dwAbortCode;
+        }
+        else
+        {
+            pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_GENERAL_ERROR;
+        }
+        // send abort
+        goto Abort;
+    }
+
+    // update internal counters
+    pSdoComCon_p->m_uiTransferredByte = uiSegmentSize;
+    pSdoComCon_p->m_uiTransSize -= uiSegmentSize;
+
+    if (pSdoComCon_p->m_SdoTransType == kEplSdoTransExpedited)
+    {   // expedited transfer
         // send command acknowledge
         Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
                                         0,
                                         0,
                                         kEplSdoComSendTypeAckRes);
-
-        pSdoComCon_p->m_uiTransSize = 0;
-        goto Exit;
     }
     else
-    {
-        // get size of the object to check if it fits
-        // because we directly write to the destination memory
-        // d.k. no one calls the user OD callback function
-
-        EntrySize = EplObduGetDataSize(uiIndex, uiSubindex);
-        if(EntrySize < pSdoComCon_p->m_uiTransSize)
-        {   // parameter too big
-            pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_TOO_HIGH;
-            // send abort
-            // d.k. This is wrong: k.t. not needed send abort on end of write
-            /*pSdoComCon_p->m_pData = (BYTE*)&dwAbortCode;
-            Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                        uiIndex,
-                                        uiSubindex,
-                                        kEplSdoComSendTypeAbort);*/
-            goto Abort;
-        }
-
-        uiBytesToTransfer = AmiGetWordFromLe(&pAsySdoCom_p->m_le_wSegmentSize);
-        // eleminate header (Command header (8) + variable part (4) + Command header (4))
-        uiBytesToTransfer -= 16;
-        // get pointer to object entry
-        pSdoComCon_p->m_pData = EplObduGetObjectDataPtr(uiIndex,
-                                                        uiSubindex);
-        if(pSdoComCon_p->m_pData == NULL)
-        {
-            pSdoComCon_p->m_dwLastAbortCode = EPL_SDOAC_GENERAL_ERROR;
-            // send abort
-            // d.k. This is wrong: k.t. not needed send abort on end of write
-/*            pSdoComCon_p->m_pData = (BYTE*)&pSdoComCon_p->m_dwLastAbortCode;
-            Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                        uiIndex,
-                                        uiSubindex,
-                                        kEplSdoComSendTypeAbort);*/
-            goto Abort;
-        }
-
-        // copy data
-        EPL_MEMCPY(pSdoComCon_p->m_pData, pbSrcData, uiBytesToTransfer);
-
-        // update internal counter
-        pSdoComCon_p->m_uiTransferredByte = uiBytesToTransfer;
-        pSdoComCon_p->m_uiTransSize -= uiBytesToTransfer;
-
-        // update target pointer
-        (/*(BYTE*)*/pSdoComCon_p->m_pData) += uiBytesToTransfer;
-
+    {   // segmented transfer
         // send acknowledge without any Command layer data
         Ret = EplSdoAsySeqSendData(pSdoComCon_p->m_SdoSeqConHdl,
                                                 0,
                                                 (tEplFrame*)NULL);
-        goto Exit;
     }
 
+    goto Exit;
+
 Abort:
-    if(pSdoComCon_p->m_dwLastAbortCode != 0)
+    if (pSdoComCon_p->m_dwLastAbortCode != 0)
     {
         // send abort
-        pSdoComCon_p->m_pData = (BYTE*)&pSdoComCon_p->m_dwLastAbortCode;
         Ret = EplSdoComServerSendFrameIntern(pSdoComCon_p,
-                                    uiIndex,
-                                    uiSubindex,
+                                    pSdoComCon_p->m_uiTargetIndex,
+                                    pSdoComCon_p->m_uiTargetSubIndex,
                                     kEplSdoComSendTypeAbort);
 
         // reset abort code

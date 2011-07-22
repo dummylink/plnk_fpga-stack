@@ -3830,7 +3830,9 @@ DWORD               dwPResMnTimeoutNs;
 
     if (EplNmtMnuInstance_g.m_dwPrcPResMnTimeoutNs < dwPResMnTimeoutNs)
     {
-    tEplDllNodeInfo DllNodeInfo = {0};
+    tEplDllNodeInfo DllNodeInfo;
+
+        EPL_MEMSET(&DllNodeInfo, 0, sizeof (DllNodeInfo));
 
         EplNmtMnuInstance_g.m_dwPrcPResMnTimeoutNs = dwPResMnTimeoutNs;
         DllNodeInfo.m_dwPresTimeoutNs              = dwPResMnTimeoutNs;

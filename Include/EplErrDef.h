@@ -91,6 +91,7 @@ typedef enum
     kEplReject                  = 0x000A,       // reject the subsequent command
     kEplRetry                   = 0x000B,       // retry this command
     kEplInvalidEvent            = 0x000C,       // invalid event was posted to process function
+    kEplInvalidParam            = 0x000D,       // invalid parameter specified
 
     // area for EDRV module 0x0010 - 0x001F
     kEplEdrvNoFreeTxDesc        = 0x0011,       // no free Tx descriptor available
@@ -128,13 +129,18 @@ typedef enum
     kEplObdVarEntryNotExist     = 0x0037,       // object does not contain VarEntry structure
     kEplObdValueTooLow          = 0x0038,       // value to write to an object is too low
     kEplObdValueTooHigh         = 0x0039,       // value to write to an object is too high
-    kEplObdValueLengthError     = 0x003A,       // value to write is to long or to short
+    kEplObdValueLengthError     = 0x003A,       // value to write is too long or too short
     kEplObdErrnoSet             = 0x003B,       // file I/O error occurred and errno is set
     kEplObdInvalidDcf           = 0x003C,       // device configuration file (CDC) is not valid
     kEplObdOutOfMemory          = 0x003D,       // out of memory
     kEplObdNoConfigData         = 0x003E,       // no configuration data present (CDC is empty)
+    kEplObdAccessAdopted        = 0x003F,       // OD access adopted
 //    kEplObdIllegalFloat         = 0x003B,       // illegal float variable
 //    kEplObdWrongOdBuilderKey    = 0x003F,       // OD was generated with demo version of tool ODBuilder
+
+    // area for OBD module 0x00D0 - 0x00DF
+    kEplObdSegmentReturned       = 0x00D0,       // only segment of object returned
+    kEplObdNumValSizeMismatch    = 0x00D1,       // segment size on read access does not match the object size of the numerical value
 
     // area for NMT module 0x0040 - 0x004F
     kEplNmtUnknownCommand       = 0x0040,       // unknown NMT command

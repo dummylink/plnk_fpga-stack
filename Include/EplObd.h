@@ -130,8 +130,10 @@ typedef enum
     kEplObdEvCheckExist            = 0x06,    // checking if object does exist (reading and writing)    NULL
     kEplObdEvPreRead               = 0x00,    // before reading an object                               source data buffer in OD
     kEplObdEvPostRead              = 0x01,    // after reading an object                                destination data buffer from caller
+    kEplObdEvPostReadLe            = 0x08,    // after reading an object                                destination data buffer from caller in little endian
     kEplObdEvWrStringDomain        = 0x07,    // event for changing string/domain data pointer or size  struct tEplObdVStringDomain in RAM
     kEplObdEvInitWrite             = 0x04,    // initializes writing an object (checking object size)   size of object in OD (tEplObdSize)
+    kEplObdEvInitWriteLe           = 0x04,    // initializes writing an object (checking object size)   size of object in OD (tEplObdSize)
     kEplObdEvPreWrite              = 0x02,    // before writing an object                               source data buffer from caller
     kEplObdEvPostWrite             = 0x03,    // after writing an object                                destination data buffer in OD
 //    kEplObdEvAbortSdo              = 0x05     // after an abort of an SDO transfer
@@ -400,24 +402,66 @@ typedef struct
 // r.d.: has always to be, because of new OBD-Macros for arrays
 typedef tEplObdSubEntry * tEplObdSubEntryPtr;
 
+
+typedef enum
+{
+    kEplSdoAddrTypeNodeId   =   0x00,
+    kEplSdoAddrTypeIp       =   0x01,
+
+} tEplSdoAddrType;
+
+typedef struct
+{
+    tEplSdoAddrType m_SdoAddrType;
+    unsigned int    m_uiNodeId;     // Node-ID of the remote side
+#if 0
+    union
+    {
+        struct sockaddr_storage m_SockAddr;
+    } m_Address;
+#endif
+} tEplSdoAddress;
+
+
+struct _tEplObdParam;
+
+typedef struct _tEplObdParam tEplObdParam;
+
+typedef tEplKernel (PUBLIC ROM* tEplObdCbAccessFinished) (/*EPL_MCO_DECL_INSTANCE_HDL_*/
+    tEplObdParam MEM* pParam_p);
+
 // -------------------------------------------------------------------------
 // callback function for object dictionary module
 // -------------------------------------------------------------------------
 
 // parameters for callback function
-typedef struct
+struct _tEplObdParam
 {
     tEplObdEvent    m_ObdEvent;
     unsigned int    m_uiIndex;
     unsigned int    m_uiSubIndex;
-    void *          m_pArg;
+    void *          m_pArg;             // obsolete
     DWORD           m_dwAbortCode;
+    tEplSdoAddress* m_pRemoteAddress;   // pointer to caller identification
+    void *          m_pData;
+    tEplObdSize     m_TransferSize;     // transfer size from SDO or local app
+    tEplObdSize     m_ObjSize;          // current object size from OD
+    tEplObdSize     m_SegmentSize;
+    tEplObdSize     m_SegmentOffset;
 
-} tEplObdCbParam;
+    tEplObdType     m_Type;
+    tEplObdAccess   m_Access;
 
-// define type for callback function: pParam_p points to tEplObdCbParam
-typedef tEplKernel (PUBLIC ROM* tEplObdCallback) (CCM_DECL_INSTANCE_HDL_
-    tEplObdCbParam MEM* pParam_p);
+    void *          m_pHandle;
+    tEplObdCbAccessFinished m_pfnAccessFinished;
+
+};
+
+#define tEplObdCbParam      tEplObdParam
+
+
+typedef tEplKernel (PUBLIC ROM* tEplObdCallback) (/*EPL_MCO_DECL_INSTANCE_HDL_*/
+    tEplObdParam MEM* pParam_p);
 
 // do not change the order for this struct!!!
 
