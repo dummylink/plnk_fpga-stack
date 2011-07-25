@@ -427,6 +427,23 @@ struct _tEplObdParam;
 
 typedef struct _tEplObdParam tEplObdParam;
 
+typedef enum
+{
+    kEplObdDefAccHdlEmpty               =   0x00, // new handle can be stored
+    kEplObdDefAccHdlWaitProcessing      =   0x01, // hanlde waits to be processed
+    kEplObdDefAccHdlInUse               =   0x02, // handle is currently processed
+    kEplObdDefAccHdlProcessingFinished  =   0x03, // processing is finished
+    kEplObdDefAccHdlError               =   0x04, // error happened while processing
+
+} tEplObdDefAccStatus;
+
+typedef struct sDefObdAccHdl
+{
+    tEplObdDefAccStatus m_Status;
+    tEplObdParam * m_pObdParam;
+
+} tDefObdAccHdl;
+
 typedef tEplKernel (PUBLIC ROM* tEplObdCbAccessFinished) (/*EPL_MCO_DECL_INSTANCE_HDL_*/
     tEplObdParam MEM* pParam_p);
 
