@@ -100,7 +100,7 @@ EPLDLLEXPORT tEplKernel PUBLIC EplPdouCbObdAccess(tEplObdCbParam MEM* pParam_p);
 #endif
 
 tEplKernel PUBLIC EplPdouCbNmtStateChange(tEplEventNmtStateChange NmtStateChange_p);
-
+tEplKernel PUBLIC EplPdouSetupAllPdoInternalCpyTable(void);
 
 #endif  // #ifndef _EPL_PDOU_H_
 
