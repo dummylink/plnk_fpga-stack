@@ -2288,6 +2288,7 @@ tEplSdoComCon*  pSdoComCon;
     }
 
 //Exit:
+    printf("Abort code: 0x%08x Ret: 0x%04x\n", pObdParam_p->m_dwAbortCode, Ret);
     return Ret;
 }
 #endif

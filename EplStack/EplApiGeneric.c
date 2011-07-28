@@ -1762,6 +1762,10 @@ tEplApiEventType    EventType;
     }
 
 Exit:
+    if (Ret != kEplSuccessful)
+    {
+        printf("ERROR: %s failed!\n", __func__);
+    }
     return Ret;
 }
 
