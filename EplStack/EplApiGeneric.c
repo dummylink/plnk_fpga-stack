@@ -87,6 +87,7 @@
 #include "user/EplStatusu.h"
 #include "user/EplTimeru.h"
 #include "user/EplCfmu.h"
+#include "pcp.h"
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
 #include "kernel/VirtualEthernet.h"
@@ -1671,6 +1672,71 @@ tEplApiEventType    EventType;
 
             // call user callback
             Ret = EplApiInstance_g.m_InitParam.m_pfnCbEvent(EventType, (tEplApiEventArg*) pEplEvent_p->m_pArg, EplApiInstance_g.m_InitParam.m_pEventUserArg);
+            break;
+        }
+
+        case kEplEventTypeTimer:
+        {
+        tEplTimerEventArg*  pTimerEventArg;
+        tEplObdParam*       pObdParam;
+        BYTE                abData[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+
+            Ret = kEplSuccessful;
+            // check parameter
+            if (pEplEvent_p == NULL)
+            {
+                Ret = kEplSdoSeqInvalidEvent;
+                goto Exit;
+            }
+
+            // get timerhdl
+            pTimerEventArg = (tEplTimerEventArg*)pEplEvent_p->m_pArg;
+
+            // get pointer to intern control structure of connection
+            if (pTimerEventArg->m_Arg.m_pVal == NULL)
+            {
+                Ret = kEplSdoSeqInvalidEvent;
+                goto Exit;
+            }
+
+            pObdParam = (tEplObdParam*)pTimerEventArg->m_Arg.m_pVal;
+
+            //Test forwarding Event for segmented write transfers
+            //EplApiPostUserEvent((void*) pObdParam);
+            //goto Exit;
+
+#ifdef TEST_OBD_ADOPTABLE_FINISHED_TIMERU
+            //if (pObdParam->m_ObdEvent == kEplObdEvInitWriteLe)
+            if (pObdParam->m_ObdEvent == kEplObdEvPreRead)
+            {
+                // return data
+                pObdParam->m_pData = &abData[0];
+                pObdParam->m_ObjSize = sizeof(abData);
+                pObdParam->m_SegmentSize = sizeof(abData);
+            }
+
+            // TEST abort //TODO: delete
+            if (pObdParam->m_uiSubIndex == 3)
+            {
+                pObdParam->m_dwAbortCode = EPL_SDOAC_DATA_NOT_TRANSF_DUE_LOCAL_CONTROL;
+            }
+
+            printf("EplApiProcessEvent(0x%04X/%u Ev=%X pData=%p Off=%u Size=%u\n"
+                   "                   ObjSize=%u TransSize=%u Acc=%X Typ=%X)\n",
+                pObdParam->m_uiIndex, pObdParam->m_uiSubIndex,
+                pObdParam->m_ObdEvent,
+                pObdParam->m_pData, pObdParam->m_SegmentOffset, pObdParam->m_SegmentSize,
+                pObdParam->m_ObjSize, pObdParam->m_TransferSize, pObdParam->m_Access, pObdParam->m_Type);
+
+            Ret = EplAppDefObdAccFinished(pObdParam);
+            if (Ret != kEplSuccessful)
+            {
+                Ret = kEplSdoSeqInvalidEvent;
+                goto Exit;
+            }
+
+#endif // TEST_OBD_ADOPTABLE_FINISHED_TIMERU
+
             break;
         }
 
