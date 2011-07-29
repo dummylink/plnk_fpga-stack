@@ -288,7 +288,7 @@ tEplKernel      Ret = kEplSuccessful;
             EplPdouInstance_g.m_fRunning = FALSE;
             break;
         }
-#ifndef POWERLINK_0_PDI_PCP_CONFIG //PDI is used
+#ifndef EPL_MODULE_API_PDI
         case kEplNmtGsResetConfiguration:
         {
             EplPdouInstance_g.m_fAllocated = FALSE;
@@ -305,7 +305,7 @@ tEplKernel      Ret = kEplSuccessful;
 
             break;
         }
-#endif // not POWERLINK_0_PDI_PCP_CONFIG
+#endif // not EPL_MODULE_API_PDI
 
         default:
         {   // do nothing

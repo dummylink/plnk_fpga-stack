@@ -73,7 +73,7 @@
 #include "EplObd.h"
 #include "kernel/EplDllk.h"
 #include "Benchmark.h"
-#ifdef POWERLINK_0_PDI_PCP_CONFIG //PDI is used
+#ifdef EPL_MODULE_API_PDI
     #include "pcp.h"
 #endif
 
@@ -586,7 +586,7 @@ unsigned int        uiMappObjectCount;
 
         }
 
-#ifdef POWERLINK_0_PDI_PCP_CONFIG //PDI is used
+#ifdef EPL_MODULE_API_PDI
         // acknowledge all RPDO PDI buffer right after write access
         Gi_signalPdiPdoWriteAccess();
 #endif
@@ -703,7 +703,7 @@ unsigned int        uiMappObjectCount;
         // set PDO version in frame
         AmiSetByteToLe(&pFrame_p->m_Data.m_Pres.m_le_bPdoVersion, pPdoChannel->m_bMappingVersion);
 
-#ifdef POWERLINK_0_PDI_PCP_CONFIG //PDI is used
+#ifdef EPL_MODULE_API_PDI
         // acknowledge all RPDO PDI buffer right before read access
         Gi_preparePdiPdoReadAccess();
 #endif
