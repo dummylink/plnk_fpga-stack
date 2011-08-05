@@ -1728,7 +1728,7 @@ tEplApiEventType    EventType;
                 pObdParam->m_pData, pObdParam->m_SegmentOffset, pObdParam->m_SegmentSize,
                 pObdParam->m_ObjSize, pObdParam->m_TransferSize, pObdParam->m_Access, pObdParam->m_Type);
 
-            Ret = EplAppDefObdAccFinished(pObdParam);
+            Ret = EplAppDefObdAccFinished(&pObdParam);
             if (Ret != kEplSuccessful)
             {
                 Ret = kEplSdoSeqInvalidEvent;
