@@ -1004,6 +1004,9 @@ unsigned int        uiSize;
     // get pointer to control structure
     pSdoComCon = &SdoComInstance_g.m_SdoComCon[SdoComCon_p];
 
+    // forward pointer to SDO command frame
+    pSdoComCon->m_le_pSdoCmdFrame = pAsySdoCom_p;
+
     // process state maschine
     switch(pSdoComCon->m_SdoComState)
     {
@@ -1221,6 +1224,7 @@ unsigned int        uiSize;
                             ObdParam.m_pHandle = pSdoComCon;
                             ObdParam.m_pfnAccessFinished = EplSdoComServerCbExpeditedWriteFinished;
                             ObdParam.m_pRemoteAddress = &SdoAddress;
+                            ObdParam.m_pRemoteAddress->m_le_pSdoCmdFrame = pSdoComCon->m_le_pSdoCmdFrame;
 
                             pSdoComCon->m_pData += uiSize;
 
@@ -2029,6 +2033,7 @@ BYTE            bFlag;
                 ObdParam.m_pHandle = pSdoComCon_p;
                 ObdParam.m_pfnAccessFinished = EplSdoComServerCbExpeditedReadFinished;
                 ObdParam.m_pRemoteAddress = &SdoAddress;
+                ObdParam.m_pRemoteAddress->m_le_pSdoCmdFrame = pSdoComCon_p->m_le_pSdoCmdFrame;
 
                 Ret = EplObdReadEntryToLe(&ObdParam);
                 if (Ret == kEplObdAccessAdopted)
@@ -2381,6 +2386,7 @@ tEplSdoAddress  SdoAddress;
     ObdParam.m_pHandle = pSdoComCon_p;
     ObdParam.m_pfnAccessFinished = EplSdoComServerCbExpeditedWriteFinished;
     ObdParam.m_pRemoteAddress = &SdoAddress;
+    ObdParam.m_pRemoteAddress->m_le_pSdoCmdFrame = pSdoComCon_p->m_le_pSdoCmdFrame;
 
     // save next offset in m_pData for later use in case of segmented transfer
     pSdoComCon_p->m_pData = (BYTE*) uiSegmentSize;

@@ -169,6 +169,7 @@ typedef struct
     tEplSdoTransType    m_SdoTransType;     // Auto, Expedited, Segmented
     tEplSdoServiceType  m_SdoServiceType;   // WriteByIndex, ReadByIndex
     tEplSdoType         m_SdoProtType;      // protocol layer: Auto, Udp, Asnd, Pdo
+    tEplAsySdoCom *     m_le_pSdoCmdFrame;  // pointer to SDO command frame (little endian byte order)
     BYTE*               m_pData;            // pointer to data
     unsigned int        m_uiTransSize;      // number of bytes
                                             // to transfer

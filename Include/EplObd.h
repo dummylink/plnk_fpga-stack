@@ -73,6 +73,7 @@
 #define _EPLOBD_H_
 
 #include "EplInc.h"
+#include "EplFrame.h"
 
 
 // ============================================================================
@@ -412,7 +413,8 @@ typedef enum
 
 typedef struct
 {
-    tEplSdoAddrType m_SdoAddrType;
+    tEplSdoAddrType  m_SdoAddrType;
+    tEplAsySdoCom *  m_le_pSdoCmdFrame;
     unsigned int    m_uiNodeId;     // Node-ID of the remote side
 #if 0
     union
