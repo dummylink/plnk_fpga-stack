@@ -97,7 +97,7 @@
 
 #define EPL_SEQ_DEFAULT_TIMEOUT     5000    // in [ms] => 5 sec
 
-#define EPL_SEQ_RETRY_COUNT         5       // => max. Timeout 30 sec
+#define EPL_SEQ_RETRY_COUNT         3       // => max. Timeout 30 sec
 
 #define EPL_SEQ_NUM_THRESHOLD       100     // threshold which distinguishes between old and new sequence numbers
 
