@@ -88,6 +88,7 @@
 #include "user/EplTimeru.h"
 #include "user/EplCfmu.h"
 #include "pcp.h"
+#include "cnApiEvent.h"
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
 #include "kernel/VirtualEthernet.h"
@@ -1707,6 +1708,14 @@ tEplApiEventType    EventType;
 
 #ifdef TEST_OBD_ADOPTABLE_FINISHED_TIMERU
             //if (pObdParam->m_ObdEvent == kEplObdEvInitWriteLe)
+
+            if (pObdParam->m_uiIndex >= 0x2000)
+            {
+                // throw timer event at AP
+                Gi_throwPdiEvent(kPcpPdiEventGeneric, kPcpGenEventUserTimer);
+                goto Exit;
+            }
+
             if (pObdParam->m_ObdEvent == kEplObdEvPreRead)
             {
                 // return data
@@ -1731,7 +1740,7 @@ tEplApiEventType    EventType;
             Ret = EplAppDefObdAccFinished(&pObdParam);
             if (Ret != kEplSuccessful)
             {
-                Ret = kEplSdoSeqInvalidEvent;
+                Ret = kEplSuccessful; // ignore errors (only for testing!)
                 goto Exit;
             }
 
