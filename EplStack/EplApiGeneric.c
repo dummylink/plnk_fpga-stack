@@ -87,8 +87,11 @@
 #include "user/EplStatusu.h"
 #include "user/EplTimeru.h"
 #include "user/EplCfmu.h"
+
+#ifdef EPL_MODULE_API_PDI
 #include "pcp.h"
 #include "cnApiEvent.h"
+#endif // EPL_MODULE_API_PDI
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
 #include "kernel/VirtualEthernet.h"
@@ -1678,6 +1681,7 @@ tEplApiEventType    EventType;
 
         case kEplEventTypeTimer:
         {
+#ifdef TEST_OBD_ADOPTABLE_FINISHED_TIMERU
         tEplTimerEventArg*  pTimerEventArg;
         tEplObdParam*       pObdParam;
         BYTE                abData[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
@@ -1706,15 +1710,15 @@ tEplApiEventType    EventType;
             //EplApiPostUserEvent((void*) pObdParam);
             //goto Exit;
 
-#ifdef TEST_OBD_ADOPTABLE_FINISHED_TIMERU
             //if (pObdParam->m_ObdEvent == kEplObdEvInitWriteLe)
-
+#ifdef EPL_MODULE_API_PDI
             if (pObdParam->m_uiIndex >= 0x2000)
             {
                 // throw timer event at AP
                 Gi_throwPdiEvent(kPcpPdiEventGeneric, kPcpGenEventUserTimer);
                 goto Exit;
             }
+#endif // EPL_MODULE_API_PDI
 
             if (pObdParam->m_ObdEvent == kEplObdEvPreRead)
             {
