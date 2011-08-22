@@ -2868,7 +2868,12 @@ tEplKernel              Ret;
     //------------------------------------------------------------------------
     // get address of entry of index
     Ret = EplObdGetIndexIntern (&EPL_MCO_GLB_VAR (m_ObdInitParam), pObdParam_p->m_uiIndex, &pObdEntry);
-    if (Ret != kEplSuccessful)
+    if ((Ret != kEplSuccessful)
+#ifdef EPL_MODULE_API_PDI
+        // forward all manufacturer and device specific objects to PDI
+        || (pObdParam_p->m_uiIndex >= 0x2000)
+#endif  // EPL_MODULE_API_PDI
+        )
     {
         if (EPL_MCO_GLB_VAR (m_DefaultObdEntry.m_fpCallback) == NULL)
         {   // no default OD callback function registered
