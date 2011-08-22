@@ -442,8 +442,9 @@ typedef enum
 
 typedef struct sDefObdAccHdl
 {
-    tEplObdDefAccStatus m_Status;
-    tEplObdParam * m_pObdParam;
+    tEplObdDefAccStatus m_Status;   // status of OBD access
+    tEplObdParam * m_pObdParam;     // pointer to OBD access handle
+    WORD           m_wSeqCnt;     // counter of subsequent OBD accesses to one object
 
 } tDefObdAccHdl;
 
