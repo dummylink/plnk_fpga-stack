@@ -2868,13 +2868,9 @@ tEplKernel              Ret;
     //------------------------------------------------------------------------
     // get address of entry of index
     Ret = EplObdGetIndexIntern (&EPL_MCO_GLB_VAR (m_ObdInitParam), pObdParam_p->m_uiIndex, &pObdEntry);
-    if ((Ret != kEplSuccessful)
-#ifdef EPL_MODULE_API_PDI
-        // forward all manufacturer and device specific objects to PDI
-        || (pObdParam_p->m_uiIndex >= 0x2000)
-#endif  // EPL_MODULE_API_PDI
-        )
+    if (Ret != kEplSuccessful)
     {
+        // prepare for default OBD access
         if (EPL_MCO_GLB_VAR (m_DefaultObdEntry.m_fpCallback) == NULL)
         {   // no default OD callback function registered
             pObdParam_p->m_dwAbortCode = EPL_SDOAC_OBJECT_NOT_EXIST;
@@ -2899,9 +2895,24 @@ tEplKernel              Ret;
             goto Exit;
         }
 
+#ifdef EPL_MODULE_API_PDI
+        if (pObdParam_p->m_uiIndex >= 0x2000)
+        {
+            // prepare for default OBD access
+            if (EPL_MCO_GLB_VAR (m_DefaultObdEntry.m_fpCallback) == NULL)
+            {   // no default OD callback function registered
+                pObdParam_p->m_dwAbortCode = EPL_SDOAC_OBJECT_NOT_EXIST;
+                goto Exit;
+            }
+            pObdEntry = &EPL_MCO_GLB_VAR (m_DefaultObdEntry);
+            pObdEntry->m_uiIndex = pObdParam_p->m_uiIndex;
+        }
+#endif  // EPL_MODULE_API_PDI
+
         pObdParam_p->m_Access = (*ppObdSubEntry_p)->m_Access;
         pObdParam_p->m_Type = (*ppObdSubEntry_p)->m_Type;
     }
+
 
     //------------------------------------------------------------------------
     // call callback function to inform user/stack that an object will be searched
