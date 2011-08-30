@@ -1715,7 +1715,7 @@ tEplApiEventType    EventType;
             if (pObdParam->m_uiIndex >= 0x2000)
             {
                 // throw timer event at AP
-                Gi_throwPdiEvent(kPcpPdiEventGeneric, kPcpGenEventUserTimer);
+                Gi_pcpEventPost(kPcpPdiEventGeneric, kPcpGenEventUserTimer);
                 goto Exit;
             }
 #endif // EPL_MODULE_API_PDI
