@@ -233,7 +233,7 @@
     #define EPL_MALLOC(siz)             malloc(siz)
 #endif
 #ifndef EPL_FREE
-    #define EPL_FREE(ptr)               printf("free %p", (ptr)); free(ptr)
+    #define EPL_FREE(ptr)               free(ptr)
 #endif
 
 
