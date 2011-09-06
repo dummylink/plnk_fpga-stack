@@ -108,6 +108,8 @@ tEplKernel PUBLIC EplSdoAsySeqSendData(tEplSdoSeqConHdl SdoSeqConHdl_p,
                                  unsigned int    uiDataSize_p,
                                  tEplFrame*      pData_p );
 
+BOOL PUBLIC EplSdoAsySeqAppFlowControl(WORD wDecrSendSeqNum_p, BOOL fEnable_p);
+
 tEplKernel PUBLIC EplSdoAsySeqProcessEvent(tEplEvent* pEvent_p);
 
 tEplKernel PUBLIC EplSdoAsySeqDelCon(tEplSdoSeqConHdl SdoSeqConHdl_p);

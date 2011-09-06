@@ -191,6 +191,12 @@ typedef struct
 
 static tEplAsySdoSequInstance   AsySdoSequInstance_g;
 
+// workaround for application to provide flow control
+// TODO: This is applies global to every SDO connection, but should be applied
+//       only to one connection. So if this workaround is used, only one
+//       connection is allowed to be active.
+static WORD wRecvSeqNumManipulation_l = 0;
+
 //---------------------------------------------------------------------------
 // local function prototypes
 //---------------------------------------------------------------------------
@@ -461,6 +467,9 @@ unsigned int        uiFreeCon;
 tEplSdoConHdl       ConHandle = ~0U;
 tEplAsySdoSeqCon*   pAsySdoSeqCon;
     Ret = kEplSuccessful;
+
+    // disable application flow control
+    EplSdoAsySeqAppFlowControl(0, FALSE);
 
     // check SdoType
     // call init function of the protcol abstraction layer
@@ -744,6 +753,43 @@ unsigned int        uiCount;
 Exit:
     return Ret;
 
+}
+
+//---------------------------------------------------------------------------
+//
+// Function:    EplSdoAsySeqAppFlowControl
+//
+// Description: Flow control possibility for application by manipulating (decrease)
+//              received sequence counter in order to hold back new received
+//              sequence layer frames
+//
+// Parameters:  wDecrSendSeqNum_p = decrease send sequence number by this value
+//              fEnable_p         = TRUE: enable manipulation
+//                                  FALSE: disable manipulation
+//
+// Returns:     TRUE: Flow control enabled
+//              FALSE: Flow control disabled
+//
+// State:
+//
+//---------------------------------------------------------------------------
+BOOL PUBLIC EplSdoAsySeqAppFlowControl(WORD wDecrSendSeqNum_p, BOOL fEnable_p)
+{
+BOOL      fRet;
+
+    if (fEnable_p)
+    {   // enable flow control
+        // two LSBs don't belong to received sequence number -> shift needed
+        wRecvSeqNumManipulation_l = (wDecrSendSeqNum_p << 2);
+        fRet = TRUE;
+    }
+    else
+    {   // disable flow control
+        wRecvSeqNumManipulation_l = 0;
+        fRet = FALSE;
+    }
+
+    return fRet;
 }
 
 //---------------------------------------------------------------------------
@@ -1592,6 +1638,9 @@ unsigned int        uiFreeEntries;
                 //close event from higher layer
                 case kAsySdoSeqEventCloseCon:
                 {
+                    // disable application flow control
+                    EplSdoAsySeqAppFlowControl(0, FALSE);
+
                     pAsySdoSeqCon->m_SdoState = kEplAsySdoStateIdle;
                     // set rcon and scon to 0
                     pAsySdoSeqCon->m_bSendSeqNum &= EPL_SEQ_NUM_MASK;
@@ -1928,8 +1977,12 @@ unsigned int    uiFreeEntries = 0;
     // set service id sdo
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_le_bServiceId, 0x05);
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_abReserved,0x00);
+
     // set receive sequence number and rcon
-    AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bRecSeqNumCon, pAsySdoSeqCon_p->m_bSendSeqNum);
+    // if application needs flow control wRecvSeqNumManipulation_l is != 0 -> decreases receive sequence number
+    AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bRecSeqNumCon,
+                    (pAsySdoSeqCon_p->m_bSendSeqNum - wRecvSeqNumManipulation_l)               );
+
     // set send sequence number and scon
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bSendSeqNumCon, pAsySdoSeqCon_p->m_bRecSeqNum);
 
