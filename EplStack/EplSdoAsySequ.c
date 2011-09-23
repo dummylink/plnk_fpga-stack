@@ -195,7 +195,8 @@ static tEplAsySdoSequInstance   AsySdoSequInstance_g;
 // TODO: This is applies global to every SDO connection, but should be applied
 //       only to one connection. So if this workaround is used, only one
 //       connection is allowed to be active.
-static WORD wRecvSeqNumManipulation_l = 0;
+static WORD fEnableAppFlowCntrl_l = FALSE;
+static WORD wLastUsedRecvSeqNum_l = 0;
 
 //---------------------------------------------------------------------------
 // local function prototypes
@@ -763,7 +764,7 @@ Exit:
 //              received sequence counter in order to hold back new received
 //              sequence layer frames
 //
-// Parameters:  wDecrSendSeqNum_p = decrease send sequence number by this value
+// Parameters:  wDecrSendSeqNum_p = currently not used
 //              fEnable_p         = TRUE: enable manipulation
 //                                  FALSE: disable manipulation
 //
@@ -779,13 +780,17 @@ BOOL      fRet;
 
     if (fEnable_p)
     {   // enable flow control
-        // two LSBs don't belong to received sequence number -> shift needed
-        wRecvSeqNumManipulation_l = (wDecrSendSeqNum_p << 2);
+        fEnableAppFlowCntrl_l = TRUE;
+
+        // set rcon valid
+        // received sequence number will be freezed to this value
+        // (two LSBs don't belong to received sequence number)
+        wLastUsedRecvSeqNum_l |= 0x02;
         fRet = TRUE;
     }
     else
     {   // disable flow control
-        wRecvSeqNumManipulation_l = 0;
+        fEnableAppFlowCntrl_l = FALSE;
         fRet = FALSE;
     }
 
@@ -1978,17 +1983,34 @@ unsigned int    uiFreeEntries = 0;
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_le_bServiceId, 0x05);
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_abReserved,0x00);
 
-    // set receive sequence number and rcon
-    // if application needs flow control wRecvSeqNumManipulation_l is != 0 -> decreases receive sequence number
-    AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bRecSeqNumCon,
-                    (pAsySdoSeqCon_p->m_bSendSeqNum - wRecvSeqNumManipulation_l)               );
+    if (fEnableAppFlowCntrl_l == FALSE)
+    {
+        // regular processing
 
-    // set send sequence number and scon
-    AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bSendSeqNumCon, pAsySdoSeqCon_p->m_bRecSeqNum);
+        // set receive sequence number and rcon
+        AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bRecSeqNumCon,
+                        pAsySdoSeqCon_p->m_bSendSeqNum                                            );
+
+        // store value in case application wants to use flow control
+        wLastUsedRecvSeqNum_l = pAsySdoSeqCon_p->m_bSendSeqNum;
+
+        // set send sequence number and scon
+        AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bSendSeqNumCon, pAsySdoSeqCon_p->m_bRecSeqNum);
+    }
+    else
+    {
+        // flow control manipulation triggered by application -> freezed received sequence counter
+
+        // set receive sequence number and rcon
+        AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bRecSeqNumCon,
+                        wLastUsedRecvSeqNum_l | 0x03); // issue retransmission request (0x03) for flow control
+
+        // set send sequence number and scon
+        AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bSendSeqNumCon, pAsySdoSeqCon_p->m_bRecSeqNum);
+    }
 
     // add size
     uiDataSize_p += EPL_SEQ_HEADER_SIZE;
-
 
     // forward frame to appropriate lower layer
     Ret = EplSdoAsySeqSendLowerLayer(pAsySdoSeqCon_p,
