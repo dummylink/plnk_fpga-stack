@@ -1218,7 +1218,7 @@ tEplKernel      Ret = kEplSuccessful;
 
 tEplKernel PUBLIC EplApiPostUserEvent(void* pUserArg_p)
 {
-tEplKernel  Ret;
+tEplKernel  Ret = kEplSuccessful;
 tEplEvent   Event;
 
     Event.m_EventSink = kEplEventSinkApi;

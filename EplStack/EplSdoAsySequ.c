@@ -764,7 +764,10 @@ Exit:
 //              received sequence counter in order to hold back new received
 //              sequence layer frames
 //
-// Parameters:  wDecrSendSeqNum_p = currently not used
+// Parameters:  fForceRetransmission_p = TRUE: SDO Sequence layer sends ack with
+//                                             retransmission request (error) flag
+//                                       FALSE: SDO ack with connection valid flag
+//
 //              fEnable_p         = TRUE: enable manipulation
 //                                  FALSE: disable manipulation
 //
@@ -774,7 +777,7 @@ Exit:
 // State:
 //
 //---------------------------------------------------------------------------
-BOOL PUBLIC EplSdoAsySeqAppFlowControl(WORD wDecrSendSeqNum_p, BOOL fEnable_p)
+BOOL PUBLIC EplSdoAsySeqAppFlowControl(BOOL fForceRetransmission_p, BOOL fEnable_p)
 {
 BOOL      fRet;
 
@@ -782,10 +785,22 @@ BOOL      fRet;
     {   // enable flow control
         fEnableAppFlowCntrl_l = TRUE;
 
-        // set rcon valid
-        // received sequence number will be freezed to this value
-        // (two LSBs don't belong to received sequence number)
-        wLastUsedRecvSeqNum_l |= 0x02;
+        if (fForceRetransmission_p)
+        {
+            // set rcon error (retransmission request)
+            // received sequence number will be freezed to this value
+            // (two LSBs don't belong to received sequence number)
+            wLastUsedRecvSeqNum_l |= 0x03;
+
+        }
+        else
+        {
+            // set rcon valid
+            // received sequence number will be freezed to this value
+            // (two LSBs don't belong to received sequence number)
+            wLastUsedRecvSeqNum_l |= 0x02;
+        }
+
         fRet = TRUE;
     }
     else
@@ -2003,7 +2018,7 @@ unsigned int    uiFreeEntries = 0;
 
         // set receive sequence number and rcon
         AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bRecSeqNumCon,
-                        wLastUsedRecvSeqNum_l | 0x03); // issue retransmission request (0x03) for flow control
+                        wLastUsedRecvSeqNum_l); // application modified sequence number + connection flag
 
         // set send sequence number and scon
         AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bSendSeqNumCon, pAsySdoSeqCon_p->m_bRecSeqNum);
