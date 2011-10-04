@@ -71,6 +71,7 @@
 #include "kernel/EplDllkCal.h"
 #include "kernel/EplDllk.h"
 #include "kernel/EplEventk.h"
+#include "user/EplSdoAsySequ.h"
 
 #include "EplDllCal.h"
 #if EPL_USE_SHAREDBUFF != FALSE
@@ -599,11 +600,25 @@ Exit:
 // State:
 //
 //---------------------------------------------------------------------------
-
+static wAckCnt_l = 0;
 tEplKernel EplDllkCalAsyncFrameReceived(tEplFrameInfo * pFrameInfo_p)
 {
 tEplKernel  Ret = kEplSuccessful;
 tEplEvent   Event;
+
+    //printf("--> RxAsndFrame(%lu)\n", EplTimerSynckGetDeltaTimeMs()); //DEBUG_MH
+
+    if (fEnableAppFlowCntrlRetransmission_g)
+    {
+        // ack only every 4th received sequence to reduce load
+        wAckCnt_l++;
+
+        if (wAckCnt_l % 2)
+        {
+            return Ret;
+        }
+
+    }
 
     Event.m_EventSink = kEplEventSinkDlluCal;
     Event.m_EventType = kEplEventTypeAsndRx;
@@ -619,6 +634,8 @@ tEplEvent   Event;
     {
         EplDllkCalInstance_g.m_Statistics.m_ulMaxRxFrameCount++;
     }
+
+
 
     return Ret;
 }
