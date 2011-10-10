@@ -69,7 +69,6 @@
 ****************************************************************************/
 
 #include "user/EplSdoAsySequ.h"
-#include "kernel/EplTimerSynck.h"
 
 
 #if ((((EPL_MODULE_INTEGRATION) & (EPL_MODULE_SDO_UDP)) == 0) &&\
@@ -196,10 +195,9 @@ static tEplAsySdoSequInstance   AsySdoSequInstance_g;
 // TODO: This is applies global to every SDO connection, but should be applied
 //       only to one connection. So if this workaround is used, only one
 //       connection is allowed to be active.
-BOOL fEnableAppFlowCntrlRetransmission_g = FALSE;
+BOOL fEplSdoAsySequEnableRetrasmFlowCntrl_g = FALSE;
 static BOOL fEnableAppFlowCntrl_l = FALSE;
 static WORD wLastUsedRecvSeqNum_l = 0;
-static wAckCnt_l = 0;
 
 //---------------------------------------------------------------------------
 // local function prototypes
@@ -794,7 +792,7 @@ BOOL      fRet;
             // received sequence number will be freezed to this value
             // (two LSBs don't belong to received sequence number)
             wLastUsedRecvSeqNum_l |= 0x03;
-            fEnableAppFlowCntrlRetransmission_g = TRUE;
+            fEplSdoAsySequEnableRetrasmFlowCntrl_g = TRUE;
 
         }
         else
@@ -803,7 +801,7 @@ BOOL      fRet;
             // received sequence number will be freezed to this value
             // (two LSBs don't belong to received sequence number)
             wLastUsedRecvSeqNum_l |= 0x02;
-            fEnableAppFlowCntrlRetransmission_g = FALSE;
+            fEplSdoAsySequEnableRetrasmFlowCntrl_g = FALSE;
         }
 
         fRet = TRUE;
@@ -811,7 +809,7 @@ BOOL      fRet;
     else
     {   // disable flow control
         fEnableAppFlowCntrl_l = FALSE;
-        fEnableAppFlowCntrlRetransmission_g = FALSE;
+        fEplSdoAsySequEnableRetrasmFlowCntrl_g = FALSE;
         fRet = FALSE;
     }
 
@@ -1548,41 +1546,6 @@ unsigned int        uiFreeEntries;
                         // normal frame
                         case 2:
                         {
-                            if ((bSendSeqNumCon & EPL_ASY_SDO_CON_MASK) == 3)
-                            {   // ack request received
-
-                                if (0)//fEnableAppFlowCntrl_l)
-                                {
-                                    // ack only every 4th received sequence to reduce load
-                                    if (!(wAckCnt_l % 4))
-                                    {
-                                        // send ack
-                                        Ret = EplSdoAsySeqSendIntern(pAsySdoSeqCon,
-                                                                0,
-                                                                NULL,
-                                                                FALSE);
-                                        if(Ret != kEplSuccessful)
-                                        {
-                                            goto Exit;
-                                        }
-                                    }
-
-                                    wAckCnt_l++;
-                                }
-                                else
-                                {
-                                    // create ack with own scon = 2
-                                    Ret = EplSdoAsySeqSendIntern(pAsySdoSeqCon,
-                                                            0,
-                                                            NULL,
-                                                            FALSE);
-                                    if(Ret != kEplSuccessful)
-                                    {
-                                        goto Exit;
-                                    }
-                                }
-
-                            }
 
                             if ((AmiGetByteFromLe(&pRecFrame_p->m_le_bRecSeqNumCon) & EPL_ASY_SDO_CON_MASK) == 3)
                             {
@@ -1674,6 +1637,20 @@ unsigned int        uiFreeEntries;
                                 break;
                             }
                             // else, ignore repeated frame
+
+                            if ((bSendSeqNumCon & EPL_ASY_SDO_CON_MASK) == 3)
+                            {   // ack request received
+
+                                // create ack with own scon = 2
+                                Ret = EplSdoAsySeqSendIntern(pAsySdoSeqCon,
+                                                        0,
+                                                        NULL,
+                                                        FALSE);
+                                if(Ret != kEplSuccessful)
+                                {
+                                    goto Exit;
+                                }
+                            }
 
                             break;
                         }
@@ -2054,9 +2031,6 @@ unsigned int    uiFreeEntries = 0;
 
     // add size
     uiDataSize_p += EPL_SEQ_HEADER_SIZE;
-
-    printf("<-- Send ACK\n");
-    EplTimerSynckGetAndPrintDeltaTimeMs();
 
     // forward frame to appropriate lower layer
     Ret = EplSdoAsySeqSendLowerLayer(pAsySdoSeqCon_p,

@@ -114,7 +114,7 @@ tEplKernel PUBLIC EplSdoAsySeqProcessEvent(tEplEvent* pEvent_p);
 
 tEplKernel PUBLIC EplSdoAsySeqDelCon(tEplSdoSeqConHdl SdoSeqConHdl_p);
 
-extern BOOL fEnableAppFlowCntrlRetransmission_g;
+extern BOOL fEplSdoAsySequEnableRetrasmFlowCntrl_g;
 
 
 

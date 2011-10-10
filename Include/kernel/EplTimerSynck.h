@@ -111,8 +111,6 @@ tEplKernel PUBLIC EplTimerSynckSetLossOfSyncTolerance2Ns(DWORD dwLossOfSyncToler
 
 tEplKernel PUBLIC EplTimerSynckTriggerAtTimeStamp(tEplTgtTimeStamp* pTimeStamp_p);
 
-DWORD PUBLIC EplTimerSynckGetAndPrintDeltaTimeMs(void);
-
 tEplKernel PUBLIC EplTimerSynckStopSync(void);
 
 

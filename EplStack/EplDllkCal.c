@@ -193,7 +193,7 @@ typedef struct
 static tEplDllkCalInstance     EplDllkCalInstance_g;
 
 // SDO flow control mechanism prevents event posting (workaround)
-static wAsycSdoRxCnt_l = 0;
+static WORD wAsycSdoRxCnt_l = 0;
 
 //---------------------------------------------------------------------------
 // local function prototypes
@@ -609,15 +609,15 @@ tEplKernel  Ret = kEplSuccessful;
 tEplEvent   Event;
 BYTE bAsndServiceId;
 
-    //printf("--> RxAsndFrame(%lu)\n", EplTimerSynckGetDeltaTimeMs()); //DEBUG_MH
-    if (fEnableAppFlowCntrlRetransmission_g)
+    // application has enabled sdo sequence flow control
+    if (fEplSdoAsySequEnableRetrasmFlowCntrl_g)
     {
         // Get ASnd service ID
         bAsndServiceId = (BYTE) AmiGetByteFromLe(&pFrameInfo_p->m_pFrame->m_Data.m_Asnd.m_le_bServiceId);
 
         // prevent only SDO frames from being forwarded
         // this workaround is needed because otherwise the Shared Buffer will overflow if
-        // a retransmission request is issued by this node for every received SDO sequence frame
+        // a "retransmission request flow control" is issued by this node for every received SDO sequence frame
         if (bAsndServiceId == kEplDllAsndSdo)
         {
             // TODO: prevent forwarding of already received sequences ? -> timer necessary for sending "ACKs"
