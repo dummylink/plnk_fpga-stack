@@ -192,6 +192,9 @@ typedef struct
 // define structures statically
 static tEplDllkCalInstance     EplDllkCalInstance_g;
 
+// SDO flow control mechanism prevents event posting (workaround)
+static wAsycSdoRxCnt_l = 0;
+
 //---------------------------------------------------------------------------
 // local function prototypes
 //---------------------------------------------------------------------------
@@ -600,24 +603,35 @@ Exit:
 // State:
 //
 //---------------------------------------------------------------------------
-static wAckCnt_l = 0;
 tEplKernel EplDllkCalAsyncFrameReceived(tEplFrameInfo * pFrameInfo_p)
 {
 tEplKernel  Ret = kEplSuccessful;
 tEplEvent   Event;
+BYTE bAsndServiceId;
 
     //printf("--> RxAsndFrame(%lu)\n", EplTimerSynckGetDeltaTimeMs()); //DEBUG_MH
-
     if (fEnableAppFlowCntrlRetransmission_g)
     {
-        // ack only every 4th received sequence to reduce load
-        wAckCnt_l++;
+        // Get ASnd service ID
+        bAsndServiceId = (BYTE) AmiGetByteFromLe(&pFrameInfo_p->m_pFrame->m_Data.m_Asnd.m_le_bServiceId);
 
-        if (wAckCnt_l % 2)
+        // prevent only SDO frames from being forwarded
+        // this workaround is needed because otherwise the Shared Buffer will overflow if
+        // a retransmission request is issued by this node for every received SDO sequence frame
+        if (bAsndServiceId == kEplDllAsndSdo)
         {
-            return Ret;
-        }
+            // TODO: prevent forwarding of already received sequences ? -> timer necessary for sending "ACKs"
+            // get SDO scon from received frame
+            // bSdoSendSeqNum = (BYTE) AmiGetByteFromLe(&pFrameInfo_p->m_pFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_bSendSeqNumCon);
 
+            // forward (and acknowledge) only every 3rd received sequence to reduce load
+            wAsycSdoRxCnt_l++;
+            if (wAsycSdoRxCnt_l % 2)
+            {
+                // do not post this event -> exit
+                return Ret;
+            }
+        }
     }
 
     Event.m_EventSink = kEplEventSinkDlluCal;
