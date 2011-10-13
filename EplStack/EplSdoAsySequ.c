@@ -95,7 +95,7 @@
 #define EPL_MAX_SDO_SEQ_CON         5
 #endif
 
-#define EPL_SEQ_DEFAULT_TIMEOUT     30000    // in [ms] => 30 sec
+#define EPL_SEQ_DEFAULT_TIMEOUT     5000    // in [ms] => 5 sec
 
 #define EPL_SEQ_RETRY_COUNT         2       // => max. Timeout 60 sec
 
