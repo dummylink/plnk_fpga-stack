@@ -626,7 +626,7 @@ BYTE bAsndServiceId;
 
             // forward (and acknowledge) only every 3rd received sequence to reduce load
             wAsycSdoRxCnt_l++;
-            if (wAsycSdoRxCnt_l % 2)
+            if (wAsycSdoRxCnt_l % 3)
             {
                 // do not post this event -> exit
                 return Ret;

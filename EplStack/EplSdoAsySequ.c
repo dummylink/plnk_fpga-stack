@@ -471,7 +471,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
     Ret = kEplSuccessful;
 
     // disable application flow control
-    EplSdoAsySeqAppFlowControl(0, FALSE);
+    EplSdoAsySeqAppFlowControl(FALSE, FALSE);
 
     // check SdoType
     // call init function of the protcol abstraction layer
@@ -1546,21 +1546,6 @@ unsigned int        uiFreeEntries;
                         // normal frame
                         case 2:
                         {
-
-                            if ((bSendSeqNumCon & EPL_ASY_SDO_CON_MASK) == 3)
-                            {   // ack request received
-
-                                // create ack with own scon = 2
-                                Ret = EplSdoAsySeqSendIntern(pAsySdoSeqCon,
-                                                        0,
-                                                        NULL,
-                                                        FALSE);
-                                if(Ret != kEplSuccessful)
-                                {
-                                    goto Exit;
-                                }
-                            }
-
                             if ((AmiGetByteFromLe(&pRecFrame_p->m_le_bRecSeqNumCon) & EPL_ASY_SDO_CON_MASK) == 3)
                             {
 //                                PRINTF0("EplSdoAsySequ: error response received\n");
@@ -1651,6 +1636,20 @@ unsigned int        uiFreeEntries;
                                 break;
                             }
                             // else, ignore repeated frame
+
+                            if ((bSendSeqNumCon & EPL_ASY_SDO_CON_MASK) == 3)
+                            {   // ack request received
+
+                                // create ack with own scon = 2
+                                Ret = EplSdoAsySeqSendIntern(pAsySdoSeqCon,
+                                                        0,
+                                                        NULL,
+                                                        FALSE);
+                                if(Ret != kEplSuccessful)
+                                {
+                                    goto Exit;
+                                }
+                            }
 
                             break;
                         }
