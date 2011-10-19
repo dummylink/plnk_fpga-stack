@@ -245,6 +245,7 @@ typedef struct
     BOOL                m_fSyncOnPrcNode;   // TRUE: CN is PRes chained; FALSE: conventional CN (PReq/PRes)
 
     tEplObdCallback     m_pfnDefaultObdCallback;    // default OD callback function
+    tEplRebootCb        m_pfnRebootCb;              // callback function to reboot device
 
 } tEplApiInitParam;
 
