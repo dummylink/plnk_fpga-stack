@@ -407,10 +407,13 @@ tEplNmtEvent    NmtEvent = kEplNmtEventNoEvent;
 
         case kEplNmtCmdSwReset:
         {   // send NMT-Event to state maschine kEplNmtEventSwReset
-#if 0
-            NmtEvent = kEplNmtEventSwReset;
+#if EPL_NMT_REBOOT_ON_SWRESET == TRUE
+            if (EplNmtCnuInstance_g.m_pfnRebootCb != NULL)
+            {
+                EplNmtCnuInstance_g.m_pfnRebootCb();
+            }
 #else
-            EplNmtCnuInstance_g.m_pfnRebootCb();
+            NmtEvent = kEplNmtEventSwReset;
 #endif
             break;
         }
