@@ -406,15 +406,18 @@ tEplNmtEvent    NmtEvent = kEplNmtEventNoEvent;
         }
 
         case kEplNmtCmdSwReset:
-        {   // send NMT-Event to state maschine kEplNmtEventSwReset
-#if EPL_NMT_REBOOT_ON_SWRESET == TRUE
+        {
+            // if there is a reboot callback function we call it now
+            // to reset the node
             if (EplNmtCnuInstance_g.m_pfnRebootCb != NULL)
             {
                 EplNmtCnuInstance_g.m_pfnRebootCb();
             }
-#else
+
+            // send NMT-Event to state maschine kEplNmtEventSwReset
+            // if there was a reboot callback which reseted the board, we
+            // never come here!
             NmtEvent = kEplNmtEventSwReset;
-#endif
             break;
         }
 
