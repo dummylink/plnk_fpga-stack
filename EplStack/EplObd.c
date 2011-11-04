@@ -2213,7 +2213,8 @@ tEplObdEvent            OrgObdEvent;
 
     // normalize the source data before calling the OD callback function
     if ((pObdParam_p->m_Type == kEplObdTypVString)
-        && (((char MEM*) pObdParam_p->m_pData)[pObdParam_p->m_SegmentSize - 1] == '\0'))
+        && (((char MEM*) pObdParam_p->m_pData)[pObdParam_p->m_SegmentSize - 1] == '\0')
+        && (pObdParam_p->m_SegmentSize != 0)                                           )
     {   // last byte of source string contains null character
 
         pObdParam_p->m_SegmentSize -= 1;
