@@ -2897,7 +2897,11 @@ tEplKernel              Ret;
         }
 
 #ifdef EPL_MODULE_API_PDI
-        if (pObdParam_p->m_uiIndex >= 0x2000)
+        if ((pObdParam_p->m_uiIndex >= 0x2000)
+#ifdef CONFIG_USE_SDC_OBJECTS
+             && (pObdParam_p->m_uiIndex != 0x5020)
+#endif
+            )
         {
             // prepare for default OBD access
             if (EPL_MCO_GLB_VAR (m_DefaultObdEntry.m_fpCallback) == NULL)
