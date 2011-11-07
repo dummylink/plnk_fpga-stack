@@ -331,6 +331,12 @@ typedef struct
 
 } tEplDllkInstance;
 
+//---------------------------------------------------------------------------
+// global vars
+//---------------------------------------------------------------------------
+#ifdef CONFIG_USE_SDC_OBJECTS
+QWORD qwSocRelativeTime_g = 0;
+#endif //CONFIG_USE_SDC_OBJECTS
 
 //---------------------------------------------------------------------------
 // local vars
@@ -4655,6 +4661,11 @@ Exit:
 static tEplKernel EplDllkProcessReceivedSoc(tEdrvRxBuffer* pRxBuffer_p, tEplNmtState NmtState_p)
 {
 tEplKernel      Ret = kEplSuccessful;
+
+#ifdef CONFIG_USE_SDC_OBJECTS
+tEplFrame*      pFrame;
+#endif //CONFIG_USE_SDC_OBJECTS
+
 #if EPL_DLL_PRES_READY_AFTER_SOC != FALSE
 tEdrvTxBuffer*  pTxBuffer = NULL;
 #endif
@@ -4708,6 +4719,13 @@ tEdrvTxBuffer*  pTxBuffer = NULL;
             EplDllkInstance_g.m_uiCycleCount = (EplDllkInstance_g.m_uiCycleCount + 1) % EplDllkInstance_g.m_DllConfigParam.m_uiMultiplCycleCnt;
         }
     }
+
+#ifdef CONFIG_USE_SDC_OBJECTS
+    //get the relative time out of the frame on post it globally!
+    //TODO remove this global variable!!!
+    pFrame = (tEplFrame *) pRxBuffer_p->m_pbBuffer;
+    qwSocRelativeTime_g = pFrame->m_Data.m_Soc.m_le_RelativeTime;
+#endif //CONFIG_USE_SDC_OBJECTS
 
     // reprogram timer
 #if EPL_TIMER_USE_HIGHRES != FALSE
