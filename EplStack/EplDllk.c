@@ -420,6 +420,9 @@ static tEplKernel EplDllkUpdateFrameStatusRes(tEdrvTxBuffer* pTxBuffer_p, tEplNm
 // update PRes frame
 static tEplKernel EplDllkUpdateFramePres(tEdrvTxBuffer* pTxBuffer_p, tEplNmtState NmtState_p);
 
+// update flags of NMT Request service frames
+static tEplKernel EplDllkUpdateNmtResponseServiceFrames(tEplNmtState NmtState_p);
+
 // creates the buffer for a Tx frame and registers it to the ethernet driver
 static tEplKernel EplDllkCreateTxFrame(unsigned int * puiHandle_p,
                                 unsigned int * puiFrameSize_p,
@@ -2559,48 +2562,11 @@ static tEplKernel EplDllkProcessCycleFinish(tEplNmtState NmtState_p)
 tEplKernel      Ret = kEplReject;
 tEdrvTxBuffer*  pTxBuffer;
 
-    switch (EplDllkInstance_g.m_bUpdateTxFrame)
+    // update the flags (NMT State, RS, ...) of all frames
+    Ret = EplDllkUpdateNmtResponseServiceFrames(NmtState_p);
+    if (Ret != kEplSuccessful)
     {
-        case EPL_DLLK_UPDATE_BOTH:
-        {
-            EplDllkInstance_g.m_bCurTxBufferOffsetIdentRes ^= 1;
-            pTxBuffer = &EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_IDENTRES + EplDllkInstance_g.m_bCurTxBufferOffsetIdentRes];
-            if (pTxBuffer->m_pbBuffer != NULL)
-            {   // IdentRes does exist
-
-                Ret = EplDllkUpdateFrameIdentRes(pTxBuffer, NmtState_p);
-                if (Ret != kEplSuccessful)
-                {
-                    goto Exit;
-                }
-            }
-
-            // fall-through
-        }
-
-        case EPL_DLLK_UPDATE_STATUS:
-        {
-            EplDllkInstance_g.m_bCurTxBufferOffsetStatusRes ^= 1;
-            pTxBuffer = &EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_STATUSRES + EplDllkInstance_g.m_bCurTxBufferOffsetStatusRes];
-            if (pTxBuffer->m_pbBuffer != NULL)
-            {   // StatusRes does exist
-
-                Ret = EplDllkUpdateFrameStatusRes(pTxBuffer, NmtState_p);
-                if (Ret != kEplSuccessful)
-                {
-                    goto Exit;
-                }
-            }
-
-            // reset signal variable
-            EplDllkInstance_g.m_bUpdateTxFrame = EPL_DLLK_UPDATE_NONE;
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
+        goto Exit;
     }
 
     Ret = EplErrorHandlerkCycleFinished((NmtState_p >= kEplNmtMsNotActive));
@@ -3181,7 +3147,17 @@ unsigned int    uiNextTxBufferOffset;
         {
             EplDllkInstance_g.m_bFlag2 = 0;
         }
+
+        // signal update of IdentRes and StatusRes on SoA
         EplDllkInstance_g.m_bUpdateTxFrame = EPL_DLLK_UPDATE_BOTH;
+
+        // immediately update all frames containing Flag 2 (PR, RS)
+        Ret = EplDllkUpdateNmtResponseServiceFrames(NmtState_p);
+        if (Ret != kEplSuccessful)
+        {
+            goto Exit;
+        }
+
     }
 
 #if (EDRV_AUTO_RESPONSE != FALSE)
@@ -6107,6 +6083,83 @@ BYTE            bFlag1;
     return Ret;
 }
 
+//---------------------------------------------------------------------------
+//
+// Function:    EplDllkUpdateNmtResponseServiceFrames
+//
+// Description: update flags of NMT Request service frames
+//
+// Parameters:  NmtState_p              = current NMT state
+//
+// Returns:     tEplKernel              = error code
+//
+//
+// State:
+//
+//---------------------------------------------------------------------------
+
+static tEplKernel EplDllkUpdateNmtResponseServiceFrames(tEplNmtState NmtState_p)
+{
+tEplKernel      Ret = kEplSuccessful;
+tEdrvTxBuffer*  pTxBuffer;
+
+    switch (EplDllkInstance_g.m_bUpdateTxFrame)
+    {
+        case EPL_DLLK_UPDATE_BOTH:
+        {
+            EplDllkInstance_g.m_bCurTxBufferOffsetIdentRes ^= 1;
+            pTxBuffer = &EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_IDENTRES + EplDllkInstance_g.m_bCurTxBufferOffsetIdentRes];
+            if (pTxBuffer->m_pbBuffer != NULL)
+            {   // IdentRes does exist
+
+                Ret = EplDllkUpdateFrameIdentRes(pTxBuffer, NmtState_p);
+                if (Ret != kEplSuccessful)
+                {
+                    goto Exit;
+                }
+            }
+
+            // fall-through
+        }
+
+        case EPL_DLLK_UPDATE_STATUS:
+        {
+            EplDllkInstance_g.m_bCurTxBufferOffsetStatusRes ^= 1;
+            pTxBuffer = &EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_STATUSRES + EplDllkInstance_g.m_bCurTxBufferOffsetStatusRes];
+            if (pTxBuffer->m_pbBuffer != NULL)
+            {   // StatusRes does exist
+
+                Ret = EplDllkUpdateFrameStatusRes(pTxBuffer, NmtState_p);
+                if (Ret != kEplSuccessful)
+                {
+                    goto Exit;
+                }
+            }
+
+            // reset signal variable
+            EplDllkInstance_g.m_bUpdateTxFrame = EPL_DLLK_UPDATE_NONE;
+
+            // fall-through
+        }
+
+        default:
+        {
+              // update PRes
+              // whole PRes will be updated in Sync event, which is sufficient as long as
+              // sync event happens right after Asnd Tx IRS. TODO: Undo comments if its also needed here.
+//            Ret = EplDllkUpdateFramePres(&EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_PRES + (EplDllkInstance_g.m_bCurTxBufferOffsetCycle ^ 1)],
+//                                         NewNmtState_p);
+//            if (Ret != kEplSuccessful)
+//            {
+//                goto Exit;
+//            }
+            break;
+        }
+    }
+
+Exit:
+    return Ret;
+}
 
 //---------------------------------------------------------------------------
 //
