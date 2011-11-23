@@ -336,6 +336,7 @@ typedef struct
 //---------------------------------------------------------------------------
 #ifdef CONFIG_USE_SDC_OBJECTS
 QWORD qwSocRelativeTime_g = 0;
+BOOL  fSocRelTimeValid_g = FALSE;
 #endif //CONFIG_USE_SDC_OBJECTS
 
 //---------------------------------------------------------------------------
@@ -4697,10 +4698,28 @@ tEdrvTxBuffer*  pTxBuffer = NULL;
     }
 
 #ifdef CONFIG_USE_SDC_OBJECTS
-    //get the relative time out of the frame on post it globally!
-    //TODO remove this global variable!!!
+    // get the relative time from the SoC frame
+    // TODO: remove global variables
     pFrame = (tEplFrame *) pRxBuffer_p->m_pbBuffer;
-    qwSocRelativeTime_g = pFrame->m_Data.m_Soc.m_le_RelativeTime;
+
+    if (NmtState_p == kEplNmtCsOperational)
+    {
+        if (fSocRelTimeValid_g == FALSE)
+        {
+            // from the first change in the SoC time stamp it is considered valid
+            if (qwSocRelativeTime_g != pFrame->m_Data.m_Soc.m_le_RelativeTime)
+            {
+                fSocRelTimeValid_g = TRUE;
+            }
+        }
+        // save Soc Relative Time
+        qwSocRelativeTime_g = pFrame->m_Data.m_Soc.m_le_RelativeTime;
+    }
+    else
+    {
+        // SoC time stamp only valid in Operational
+        fSocRelTimeValid_g = FALSE;
+    }
 #endif //CONFIG_USE_SDC_OBJECTS
 
     // reprogram timer
