@@ -2426,7 +2426,9 @@ BOOL                    fEntryNumerical;
 
     Access = pObdParam_p->m_Access;
 
-    if (((Access & kEplObdAccRead) == 0) && (pObdParam_p->m_pRemoteAddress != NULL))
+    if (((Access & kEplObdAccRead) == 0) &&
+         (pObdParam_p->m_pRemoteAddress != NULL) &&
+         ((Access & kEplObdAccConst) == 0)         )
     {   // read access is not allowed for remote access via SDO
         Ret = kEplObdReadViolation;
         pObdParam_p->m_dwAbortCode = EPL_SDOAC_READ_TO_WRITE_ONLY_OBJ;
