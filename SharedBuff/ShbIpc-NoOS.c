@@ -75,6 +75,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ShbTarget.h"
+#include "Epl.h"
 
 #include "SharedBuff.h"
 #include "ShbIpc.h"
@@ -341,7 +342,7 @@ unsigned long           aulCrcTable[256];
         //create new Buffer
         fShMemNewCreated = TRUE;
         uiFirstProcess=0;
-        pSharedMem = malloc(ulShMemSize);
+        pSharedMem = EPL_MALLOC(ulShMemSize);
         DEBUG_LVL_29_TRACE2("ShbIpcAllocBuffer Create New Buffer at:%p Id:%d\n",pSharedMem,iBufferId);
         if (pSharedMem == NULL)
         {
@@ -350,7 +351,7 @@ unsigned long           aulCrcTable[256];
             goto Exit;
         }
         // append Element to Mem Table
-        psMemTableElement = malloc(sizeof(struct sShbMemTable));
+        psMemTableElement = EPL_MALLOC(sizeof(struct sShbMemTable));
         psMemTableElement->m_iBufferId = iBufferId;
         psMemTableElement->m_pBuffer = pSharedMem;
         psMemTableElement->m_psNextMemTableElement = NULL;
@@ -366,7 +367,7 @@ unsigned long           aulCrcTable[256];
     // to administrate/manage the shared buffer
     DEBUG_LVL_29_TRACE0("ShbIpcAllocBuffer alloc private mem\n");
 
-    pShbMemInst = (tShbMemInst*) malloc(sizeof(tShbMemInst));
+    pShbMemInst = (tShbMemInst*) EPL_MALLOC(sizeof(tShbMemInst));
     if (pShbMemInst == NULL)
     {
         ShbError = kShbOutOfMem;
@@ -477,14 +478,14 @@ tShbError       ShbError;
         // delete mem table element
         ShbIpcDeleteListElement(pShbMemHeader->m_iBufferId);
         // delete shared mem
-        free(pShbMemInst->m_pShbMemHeader);
+        EPL_FREE(pShbMemInst->m_pShbMemHeader);
     }
     else
     {
         ShbError = kShbMemUsedByOtherProcs;
     }
     //delete privat mem
-    free(pShbMemInst);
+    EPL_FREE(pShbMemInst);
 
     return (ShbError);
 }
@@ -1084,11 +1085,11 @@ static void ShbIpcDeleteListElement(int iBufferId)
             if (psMemTableElement!=psMemTableElementFirst_g)
             {
                 psMemTableElementOld->m_psNextMemTableElement=psMemTableElement->m_psNextMemTableElement;
-                free(psMemTableElement);
+                EPL_FREE(psMemTableElement);
             }
             else
             {
-                free(psMemTableElement);
+                EPL_FREE(psMemTableElement);
                 psMemTableElementFirst_g=NULL;
             }
 
