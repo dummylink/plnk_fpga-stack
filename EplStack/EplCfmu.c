@@ -350,7 +350,7 @@ BOOL                fDoUpdate = FALSE;
 
     // fetch pointer to ConciseDCF from object 0x1F22
     // (this allows the application to link its own memory to this object)
-    pNodeInfo->m_pbDataConciseDcf = EplObduGetObjectDataPtr(0x1F22, uiNodeId_p);
+    pNodeInfo->m_pbDataConciseDcf = EplObduGetObjectDataPtr(0x1F22, uiNodeId_p, 0);
     if (pNodeInfo->m_pbDataConciseDcf == NULL)
     {
         Ret = kEplCfmNoConfigData;

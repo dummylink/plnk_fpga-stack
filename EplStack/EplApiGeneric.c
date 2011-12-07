@@ -833,6 +833,129 @@ Exit:
 
 }
 
+#ifdef EPL_MODULE_API_PDI
+//----------------------------------------------------------------------------
+// Function:    EplApiLinkPdiMappObject()
+//
+// Description: Function maps application variables to external Process Data Interface for mapping access
+//
+// Parameters:  uiObjIndex_p    = Function maps variables for this object index
+//              pVarTPdo_p      = Pointer to data memory area for the specified object if its accessed as TPDO
+//              pVarRPdo_p      = Pointer to data memory area for the specified object if its accessed as RPDO
+
+//              pEntrySize_p    = IN: pointer to size of one entry;
+//                                    if size is zero, the actual size will be read from OD
+//                                OUT: pointer to entire size of all entries mapped
+//              uiSubindex_p    = This is the subindex to be mapped.
+//
+// Returns:     tEplKernel      = error code
+//
+// State:
+//----------------------------------------------------------------------------
+
+tEplKernel PUBLIC EplApiLinkPdiMappObject( unsigned int    uiObjIndex_p,
+                                    void*           pVarTPdo_p,
+                                    void*           pVarRPdo_p,
+                                    tEplObdSize*    pEntrySize_p,
+                                    unsigned int    uiSubindex_p)
+{
+BYTE            bIndexEntries;
+tEplVarParam    VarParam;
+tEplObdSize     EntrySize;
+tEplObdSize     UsedSize;
+
+tEplKernel      RetCode = kEplSuccessful;
+
+    if (((pVarTPdo_p == NULL) && (pVarRPdo_p == NULL))
+        || (pEntrySize_p == NULL))
+    {
+        RetCode = kEplApiInvalidParam;
+        goto Exit;
+    }
+
+    UsedSize    = 0;
+
+    // init VarParam structure with default values
+    VarParam.m_uiIndex    = uiObjIndex_p;
+    VarParam.m_ValidFlag  = kVarValidAll;
+
+    if (uiSubindex_p != 0)
+    {   // check if object exists by reading subindex 0x00,
+        // because user wants to link a variable to a subindex unequal 0x00
+        // read number of entries
+        EntrySize = (tEplObdSize)  sizeof(bIndexEntries);
+        RetCode = EplObdReadEntry (
+                                uiObjIndex_p,
+                                0x00,
+                                (void GENERIC*) &bIndexEntries,
+                                &EntrySize );
+
+        if ((RetCode != kEplSuccessful) || (bIndexEntries == 0x00) )
+        {
+            // Object doesn't exist or invalid entry number
+            RetCode = kEplObdIndexNotExist;
+            goto Exit;
+        }
+    }
+    else
+    {   // user wants to link a variable to subindex 0x00
+        // that's OK
+        bIndexEntries = 0;
+    }
+
+    // if passed entry size is 0, then get size from OD
+    if (*pEntrySize_p == 0x00)
+    {
+        // read entry size
+        EntrySize = EplObdGetDataSize(uiObjIndex_p, uiSubindex_p);
+
+        if (EntrySize == 0x00)
+        {
+            // invalid entry size (maybe object doesn't exist or entry of type DOMAIN is empty)
+            RetCode = kEplObdSubindexNotExist;
+            goto Exit;
+        }
+    }
+    else
+    {   // use passed entry size
+        EntrySize = *pEntrySize_p;
+    }
+
+    VarParam.m_uiSubindex = uiSubindex_p;
+
+    // set pointers to user var
+    if ((pVarTPdo_p != NULL))
+    {
+        VarParam.m_pDataMapTPdo = (BYTE MEM*) pVarTPdo_p;
+        VarParam.m_ValidFlag |= kVarValidDataTPdo;
+    }
+    if ((pVarRPdo_p != NULL))
+    {
+        VarParam.m_pDataMapRPdo = (BYTE MEM*) pVarRPdo_p;
+        VarParam.m_ValidFlag |= kVarValidDataRPdo;
+    }
+
+    VarParam.m_Size = EntrySize;
+
+    UsedSize += EntrySize;
+
+    RetCode = EplObdDefinePdiVar(&VarParam);
+    if (RetCode != kEplSuccessful)
+    {
+        goto Exit;
+    }
+
+    // set number of mapped entries and entry size
+    *pEntrySize_p = UsedSize;
+
+
+Exit:
+
+    return (RetCode);
+
+}
+#endif // EPL_MODULE_API_PDI
+
 
 // ----------------------------------------------------------------------------
 //

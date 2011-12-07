@@ -132,10 +132,17 @@ EPLDLLEXPORT tEplKernel PUBLIC EplObdAccessOdPart (EPL_MCO_DECL_INSTANCE_PTR_
 EPLDLLEXPORT tEplKernel PUBLIC EplObdDefineVar (EPL_MCO_DECL_INSTANCE_PTR_
     tEplVarParam MEM*          pVarParam_p);
 
+#ifdef EPL_MODULE_API_PDI
+// ---------------------------------------------------------------------
+EPLDLLEXPORT tEplKernel PUBLIC EplObdDefinePdiVar (EPL_MCO_DECL_INSTANCE_PTR_
+    tEplVarParam MEM*          pVarParam_p);
+#endif // EPL_MODULE_API_PDI
+
 // ---------------------------------------------------------------------
 EPLDLLEXPORT void* PUBLIC EplObdGetObjectDataPtr (EPL_MCO_DECL_INSTANCE_PTR_
                                         unsigned int uiIndex_p,
-                                        unsigned int uiSubIndex_p);
+                                        unsigned int uiSubIndex_p,
+                                        tEplObdAccess AccessType_p);
 // ---------------------------------------------------------------------
 EPLDLLEXPORT tEplKernel PUBLIC EplObdRegisterUserOd (EPL_MCO_DECL_INSTANCE_PTR_
                                         tEplObdEntryPtr pUserOd_p);

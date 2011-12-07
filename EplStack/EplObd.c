@@ -183,7 +183,8 @@ static tEplKernel EplObdAccessOdPartIntern (EPL_MCO_DECL_INSTANCE_PTR_
                             tEplObdDir      Direction_p);
 
 static CONST void*     EplObdGetObjectDefaultPtr (tEplObdSubEntryPtr pSubIndexEntry_p);
-static void MEM*       EplObdGetObjectCurrentPtr (tEplObdSubEntryPtr pSubIndexEntry_p);
+static void MEM*       EplObdGetObjectCurrentPtr (tEplObdSubEntryPtr pSubIndexEntry_p,
+                                                  tEplObdAccess AccessType_p);
 
 #if (EPL_OBD_USE_STORE_RESTORE != FALSE)
 
@@ -198,7 +199,8 @@ static void EplObdCopyObjectData (
                         tEplObdSize     ObjSize_p,
                         tEplObdType     ObjType_p);
 
-static void * EplObdGetObjectDataPtrIntern (tEplObdSubEntryPtr pSubindexEntry_p);
+static void * EplObdGetObjectDataPtrIntern (tEplObdSubEntryPtr pSubindexEntry_p,
+                                            tEplObdAccess AccessType_p);
 
 static tEplKernel EplObdIsNumericalIntern(tEplObdType Type_p,
                                         BOOL*         pfEntryNumerical_p);
@@ -690,6 +692,12 @@ tEplObdParam  MEM       ObdParam;
     if ((VarValid & kVarValidData) != 0)
     {
        pVarEntry->m_pData = pVarParam_p->m_pData;
+
+#ifdef EPL_MODULE_API_PDI
+        // data will not be mapped to PDI by this function
+       pVarEntry->m_fLinkedToPdi = FALSE;
+#endif // EPL_MODULE_API_PDI
+
     }
 /*
     #if (EPL_PDO_USE_STATIC_MAPPING == FALSE)
@@ -714,6 +722,115 @@ Exit:
 
 }
 
+//---------------------------------------------------------------------------
+//
+// Function:    EplObdDefinePdiVar()
+//
+// Description: defines a variable in OD which is located in
+//              Process Data Inteface (PDI). This variable can only be
+//              accessed by mapping, but not by object access since it will
+//              be located in a tripple buffer.
+//
+// Parameters:  pEplVarParam_p
+//
+// Return:      tEplKernel
+//
+// State:
+//
+//---------------------------------------------------------------------------
+#ifdef EPL_MODULE_API_PDI
+EPLDLLEXPORT tEplKernel PUBLIC EplObdDefinePdiVar (EPL_MCO_DECL_INSTANCE_PTR_
+    tEplVarParam MEM* pVarParam_p)
+{
+
+tEplKernel              Ret;
+tEplObdVarEntry MEM*    pVarEntry;
+tEplVarParamValid       VarValid;
+tEplObdSubEntryPtr      pSubindexEntry;
+tEplObdParam  MEM       ObdParam;
+
+    // check for all API function if instance is valid
+    EPL_MCO_CHECK_INSTANCE_STATE ();
+
+    ASSERT (pVarParam_p != NULL);   // is not allowed to be NULL
+
+    ObdParam.m_uiIndex = pVarParam_p->m_uiIndex;
+    ObdParam.m_uiSubIndex = pVarParam_p->m_uiSubindex;
+
+    // get address of subindex entry
+    Ret = EplObdGetEntry (EPL_MCO_INSTANCE_PTR_
+        &ObdParam,
+        NULL, &pSubindexEntry);
+    if (Ret != kEplSuccessful)
+    {
+        goto Exit;
+    }
+
+    // get var entry
+    Ret = EplObdGetVarEntry (pSubindexEntry, &pVarEntry);
+    if (Ret != kEplSuccessful)
+    {
+        goto Exit;
+    }
+
+    VarValid =  pVarParam_p->m_ValidFlag;
+
+    // copy only this values, which valid flag is set
+    if ((VarValid & kVarValidSize) != 0)
+    {
+        if (pSubindexEntry->m_Type != kEplObdTypDomain)
+        {
+        tEplObdSize DataSize;
+
+            // check passed size parameter
+            DataSize = EplObdGetObjectSize(pSubindexEntry);
+            if (DataSize != pVarParam_p->m_Size)
+            {   // size of variable does not match
+                Ret = kEplObdValueLengthError;
+                goto Exit;
+            }
+        }
+        else
+        {   // size can be set only for objects of type DOMAIN
+            pVarEntry->m_Size = pVarParam_p->m_Size;
+        }
+    }
+
+    if ((VarValid & kVarValidDataTPdo) != 0)
+    {
+        // data will be mapped to PDI
+        pVarEntry->m_fLinkedToPdi = TRUE;
+        pVarEntry->m_pDataMapTPdo = pVarParam_p->m_pDataMapTPdo;
+    }
+    if ((VarValid & kVarValidDataRPdo) != 0)
+    {
+        // data will be mapped to PDI
+        pVarEntry->m_fLinkedToPdi = TRUE;
+        pVarEntry->m_pDataMapRPdo = pVarParam_p->m_pDataMapRPdo;
+    }
+/*
+    #if (EPL_PDO_USE_STATIC_MAPPING == FALSE)
+    {
+        if ((VarValid & kVarValidCallback) != 0)
+        {
+           pVarEntry->m_fpCallback = pVarParam_p->m_fpCallback;
+        }
+
+        if ((VarValid & kVarValidArg) != 0)
+        {
+           pVarEntry->m_pArg = pVarParam_p->m_pArg;
+        }
+    }
+    #endif
+*/
+    // Ret is already set to kEplSuccessful from ObdGetVarIntern()
+
+Exit:
+
+    return Ret;
+
+}
+#endif // EPL_MODULE_API_PDI
 
 //---------------------------------------------------------------------------
 //
@@ -724,6 +841,10 @@ Exit:
 //
 // Parameters:  uiIndex_p    =   Index of the entry
 //              uiSubindex_p =   Subindex of the entry
+//              AccessType_p =   request PDI address flag
+//                               0: no PDI address requested
+//                  kEplObdAccRead: TPDO PDI address requested
+//                 kEplObdAccWrite: RPDO PDI address requested
 //
 // Return:      void *    = pointer to object data
 //
@@ -733,7 +854,8 @@ Exit:
 
 EPLDLLEXPORT void * PUBLIC EplObdGetObjectDataPtr (EPL_MCO_DECL_INSTANCE_PTR_
                                         unsigned int uiIndex_p,
-                                        unsigned int uiSubIndex_p)
+                                        unsigned int uiSubIndex_p,
+                                        tEplObdAccess AccessType_p)
  {
 tEplKernel          Ret;
 void *       pData;
@@ -760,8 +882,9 @@ tEplObdSubEntryPtr  pObdSubEntry;
         pData = NULL;
         goto Exit;
     }
+
     // get Datapointer
-    pData = EplObdGetObjectDataPtrIntern(pObdSubEntry);
+    pData = EplObdGetObjectDataPtrIntern(pObdSubEntry, AccessType_p);
 
 Exit:
     return pData;
@@ -847,6 +970,10 @@ EPLDLLEXPORT void PUBLIC EplObdInitVarEntry (EPL_MCO_DECL_INSTANCE_PTR_
         // This prevents an access violation if user forgets to call EplObdDefineVar()
         // for this variable but mappes it in a PDO.
         pVarEntry_p->m_pData = &abEplObdTrashObject_g[0];
+#ifdef EPL_MODULE_API_PDI
+        pVarEntry_p->m_pDataMapTPdo = &abEplObdTrashObject_g[0];
+        pVarEntry_p->m_pDataMapRPdo = &abEplObdTrashObject_g[0];
+#endif // EPL_MODULE_API_PDI
         pVarEntry_p->m_Size  = ObdSize_p;
     }
 
@@ -1677,7 +1804,7 @@ void MEM*   pData;
     if (pSubIndexEntry_p->m_Type == kEplObdTypVString)
     {
         // The pointer to current value can be received from EplObdGetObjectCurrentPtr()
-        pData = ((void MEM*) EplObdGetObjectCurrentPtr (pSubIndexEntry_p));
+        pData = ((void MEM*) EplObdGetObjectCurrentPtr (pSubIndexEntry_p, 0));
         if (pData != NULL)
         {
             DataSize = EplObdGetStrLen ((void *) pData, DataSize, pSubIndexEntry_p->m_Type);
@@ -2140,7 +2267,7 @@ tEplObdEvent            OrgObdEvent;
 
     ObdSize = EplObdGetObjectSize (pSubEntry);
     // get pointer to object data
-    pDstData = (void MEM*) EplObdGetObjectDataPtrIntern (pSubEntry);
+    pDstData = (void MEM*) EplObdGetObjectDataPtrIntern (pSubEntry, 0);
 
     // 09-dec-2004 r.d.:
     //      Function EplObdWriteEntry() calls new event kEplObdEvWrStringDomain
@@ -2436,7 +2563,7 @@ BOOL                    fEntryNumerical;
     }
 
     // get pointer to object data
-    pSrcData = EplObdGetObjectDataPtrIntern (pSubEntry);
+    pSrcData = EplObdGetObjectDataPtrIntern (pSubEntry, 0);
 
     // get size of data and check if application has reserved enough memory
     ObdSize = EplObdGetDataSizeIntern (pSubEntry);
@@ -2953,7 +3080,11 @@ Exit:
 //
 // Description: function to get Current pointer (type specific)
 //
-// Parameters:  pSubIndexEntry_p
+// Parameters:  pSubindexEntry_p = pointer to subindex entry
+//              AccessType_p     = request PDI address flag
+//                                 0: no PDI address requested
+//                    kEplObdAccRead: TPDO PDI address requested
+//                   kEplObdAccWrite: RPDO PDI address requested
 //
 // Return:      void MEM*
 //
@@ -2961,7 +3092,8 @@ Exit:
 //
 //---------------------------------------------------------------------------
 
-static void MEM* EplObdGetObjectCurrentPtr (tEplObdSubEntryPtr pSubIndexEntry_p)
+static void MEM* EplObdGetObjectCurrentPtr (tEplObdSubEntryPtr pSubIndexEntry_p,
+                                            tEplObdAccess AccessType_p)
 {
 
 void MEM*       pData;
@@ -2992,8 +3124,50 @@ tEplObdSize     Size;
         // check if VarEntry
         if ((pSubIndexEntry_p->m_Access & kEplObdAccVar) != 0)
         {
-            // The data pointer is stored in VarEntry->pData
-            pData = ((tEplObdVarEntry MEM*) pData)->m_pData;
+
+#ifdef EPL_MODULE_API_PDI
+            if ( ((tEplObdVarEntry MEM*) pData)->m_fLinkedToPdi == FALSE)
+            {
+                // user variables not linked to PDI memory, return ordinary data pointer
+                // normalize access type
+                AccessType_p = 0;
+            }
+#endif // EPL_MODULE_API_PDI
+
+            switch (AccessType_p)
+            {
+#ifdef EPL_MODULE_API_PDI
+                case kEplObdAccRead:
+                {
+                    // TPDO address requested
+                    // The data pointer is stored in VarEntry->m_pDataMapTPdo
+                    pData = ((tEplObdVarEntry MEM*) pData)->m_pDataMapTPdo;
+                    break;
+                }
+
+                case kEplObdAccWrite:
+                {
+                    // RPDO address requested
+                    // The data pointer is stored in VarEntry->m_pDataMapRPdo
+                    pData = ((tEplObdVarEntry MEM*) pData)->m_pDataMapRPdo;
+                    break;
+                }
+#endif // EPL_MODULE_API_PDI
+                case 0:
+                {
+                    // No PDI address present or requested
+                    // The data pointer is stored in VarEntry->m_pData
+                    pData = ((tEplObdVarEntry MEM*) pData)->m_pData;
+                    break;
+                }
+
+                default:
+                {
+                    // invalid case
+                    pData = NULL;
+                    break;
+                }
+            }
         }
 
         // the default pointer is stored for strings in tEplObdVString
@@ -3383,7 +3557,7 @@ tEplObdVarEntry MEM*        pVarEntry;
 
                 // get pointer to current and default data
                 pDefault = EplObdGetObjectDefaultPtr (pSubIndex);
-                pDstData = EplObdGetObjectCurrentPtr (pSubIndex);
+                pDstData = EplObdGetObjectCurrentPtr (pSubIndex, 0);
 
                 // NOTE (for kEplObdTypVString):
                 //      The function returnes the max. number of bytes for a
@@ -3751,6 +3925,10 @@ tEplKernel Ret = kEplSuccessful;
 //              constant object it returnes the default pointer.
 //
 // Parameters:  pSubindexEntry_p = pointer to subindex entry
+//              AccessType_p     = request PDI address flag
+//                                 0: no PDI address requested
+//                    kEplObdAccRead: TPDO PDI address requested
+//                   kEplObdAccWrite: RPDO PDI address requested
 //
 // Return:      void *    = pointer to object data
 //
@@ -3758,7 +3936,8 @@ tEplKernel Ret = kEplSuccessful;
 //
 //---------------------------------------------------------------------------
 
-static void * EplObdGetObjectDataPtrIntern (tEplObdSubEntryPtr pSubindexEntry_p)
+static void * EplObdGetObjectDataPtrIntern (tEplObdSubEntryPtr pSubindexEntry_p,
+                                            tEplObdAccess AccessType_p)
 {
 
 void * pData = NULL;
@@ -3784,7 +3963,7 @@ tEplObdAccess Access;
     else
     {
         // The pointer to current value can be received from ObdGetObjectCurrentPtr()
-        pData = EplObdGetObjectCurrentPtr (pSubindexEntry_p);
+        pData = EplObdGetObjectCurrentPtr (pSubindexEntry_p, AccessType_p);
     }
 
 Exit:

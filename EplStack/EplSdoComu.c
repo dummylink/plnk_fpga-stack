@@ -2059,7 +2059,7 @@ BYTE            bFlag;
                 if (ObdParam.m_SegmentSize < ObdParam.m_TransferSize)
                 {   // the transfer is in fact a segmented transfer
                     pSdoComCon_p->m_SdoTransType = kEplSdoTransSegmented;
-                    pSdoComCon_p->m_pData = EplObduGetObjectDataPtr(uiIndex_p, uiSubIndex_p);
+                    pSdoComCon_p->m_pData = EplObduGetObjectDataPtr(uiIndex_p, uiSubIndex_p, 0);
 
                     pSdoComCon_p->m_uiTransSize = ObdParam.m_TransferSize;
 

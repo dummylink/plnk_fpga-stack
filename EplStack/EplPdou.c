@@ -1144,7 +1144,7 @@ void*               pVar;
         goto Exit;
     }
 
-    pVar = EplObduGetObjectDataPtr(uiIndex, uiSubIndex);
+    pVar = EplObduGetObjectDataPtr(uiIndex, uiSubIndex, AccessType_p);
     if (pVar == NULL)
     {   // entry doesn't exist
         *pdwAbortCode_p = EPL_SDOAC_OBJECT_NOT_EXIST;

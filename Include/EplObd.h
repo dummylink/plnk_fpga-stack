@@ -309,8 +309,11 @@ typedef enum
     kVarValidData           = 0x02,
 //    kVarValidCallback       = 0x04,
 //    kVarValidArg            = 0x08,
-
-    kVarValidAll            = 0x03  // currently only size and data are implemented and used
+    kVarValidAll            = 0x03,  // currently only size and data are implemented and used
+#ifdef EPL_MODULE_API_PDI
+    kVarValidDataTPdo       = 0x10,
+    kVarValidDataRPdo       = 0x20,
+#endif // EPL_MODULE_API_PDI
 
 }tEplVarParamValid;
 
@@ -325,6 +328,10 @@ typedef struct
     unsigned int        m_uiSubindex;
     tEplObdSize         m_Size;
     void MEM*           m_pData;
+#ifdef EPL_MODULE_API_PDI
+    void MEM*           m_pDataMapTPdo;
+    void MEM*           m_pDataMapRPdo;
+#endif // EPL_MODULE_API_PDI
 //    tEplVarCallback     m_fpCallback;
 //    void *       m_pArg;
 
@@ -333,7 +340,12 @@ typedef struct
 typedef struct
 {
     void MEM*           m_pData;
-    tEplObdSize            m_Size;
+    tEplObdSize         m_Size;
+#ifdef EPL_MODULE_API_PDI
+    BOOL                m_fLinkedToPdi;
+    void MEM*           m_pDataMapTPdo;
+    void MEM*           m_pDataMapRPdo;
+#endif // EPL_MODULE_API_PDI
 /*
     #if (EPL_PDO_USE_STATIC_MAPPING == FALSE)
         tEplVarCallback    m_fpCallback;

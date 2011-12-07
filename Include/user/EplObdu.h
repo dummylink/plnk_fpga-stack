@@ -115,7 +115,8 @@ EPLDLLEXPORT tEplKernel PUBLIC EplObduDefineVar (tEplVarParam MEM* pVarParam_p);
 
 // ---------------------------------------------------------------------
 EPLDLLEXPORT void* PUBLIC EplObduGetObjectDataPtr (unsigned int uiIndex_p,
-                                        unsigned int uiSubIndex_p);
+                                        unsigned int uiSubIndex_p,
+                                        tEplObdAccess AccessType_p);
 // ---------------------------------------------------------------------
 EPLDLLEXPORT tEplKernel PUBLIC EplObduRegisterUserOd (
                                         tEplObdEntryPtr pUserOd_p);

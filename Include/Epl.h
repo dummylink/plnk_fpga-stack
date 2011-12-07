@@ -332,6 +332,14 @@ EPLDLLEXPORT tEplKernel PUBLIC EplApiLinkObject( unsigned int    uiObjIndex_p,
                                     tEplObdSize*    pEntrySize_p,
                                     unsigned int    uiFirstSubindex_p);
 
+#ifdef EPL_MODULE_API_PDI
+EPLDLLEXPORT tEplKernel PUBLIC EplApiLinkPdiMappObject( unsigned int    uiObjIndex_p,
+                                    void*           pVarTPdo_p,
+                                    void*           pVarRPdo_p,
+                                    tEplObdSize*    pEntrySize_p,
+                                    unsigned int    uiSubindex_p);
+#endif // EPL_MODULE_API_PDI
+
 EPLDLLEXPORT tEplKernel PUBLIC EplApiExecNmtCommand(tEplNmtEvent NmtEvent_p);
 
 EPLDLLEXPORT tEplKernel PUBLIC EplApiProcess(void);

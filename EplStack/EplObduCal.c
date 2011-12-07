@@ -241,6 +241,7 @@ tEplKernel  Ret;
 //
 // Parameters:  uiIndex_p    =   Index of the entry
 //              uiSubindex_p =   Subindex of the entry
+//              AccessType_p =   request PDI address flag
 //
 // Return:      void *    = pointer to object data
 //
@@ -248,12 +249,13 @@ tEplKernel  Ret;
 //
 //---------------------------------------------------------------------------
 EPLDLLEXPORT void* PUBLIC EplObduCalGetObjectDataPtr ( unsigned int uiIndex_p,
-                                        unsigned int uiSubIndex_p)
+                                        unsigned int uiSubIndex_p,
+                                        tEplObdAccess AccessType_p)
 {
 void*   pData;
 
 #if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_OBDK)) != 0)
-    pData = EplObdGetObjectDataPtr(uiIndex_p, uiSubIndex_p);
+    pData = EplObdGetObjectDataPtr(uiIndex_p, uiSubIndex_p, AccessType_p);
 #else
     pData = NULL;
 #endif
