@@ -76,6 +76,22 @@
         EPL_OBD_RAM_INDEX_RAM_ARRAY(0x1F27, EPL_NMT_MAX_NODE_ID, NULL, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, CFM_ExpConfTimeList_AU32, 0)
 #endif
 
+#ifdef CONFIG_USER_IMAGE_FLASH_ADRS
+        // firmware update related objects
+        // Object 1F51h: PDL_ProgCtrl_AU8
+        EPL_OBD_BEGIN_INDEX_RAM(0x1F51, 0x02, EplApiCbObdAccess)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F51, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x01)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F51, 0x01, kEplObdTypUInt8, kEplObdAccRW, tEplObdUnsigned8, ProgCtrl, 0x00)
+        EPL_OBD_END_INDEX(0x1F51)
+
+        // Object 1F52h: PDL_LocVerApplSw_REC
+        EPL_OBD_BEGIN_INDEX_RAM(0x1F52, 0x03, EplApiCbObdAccess)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F52, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x02)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F52, 0x01, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, ApplSwDate_U32, 0x00)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F52, 0x02, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, ApplSwTime_U32, 0x00)
+        EPL_OBD_END_INDEX(0x1F52)
+#endif // CONFIG_USER_IMAGE_FLASH_ADRS
+
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)
         // Object 1F80h: NMT_StartUp_U32
         EPL_OBD_BEGIN_INDEX_RAM(0x1F80, 0x01, NULL)

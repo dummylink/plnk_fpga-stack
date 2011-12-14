@@ -1616,6 +1616,34 @@ tEplApiEventArg     EventArg;
             break;
         }
 
+#ifdef CONFIG_USER_IMAGE_FLASH_ADRS
+        case 0x1F52:    // PDL_LocVerApplSw_REC
+        {
+            if ((pParam_p->m_ObdEvent == kEplObdEvPreRead))
+            {
+                if (pParam_p->m_uiSubIndex == 0x01)
+                {
+                    Ret = EplObdWriteEntry(0x1F52, 1,
+                                           &EplApiInstance_g.m_InitParam.m_dwApplicationSwDate,
+                                           4);
+                }
+                else if (pParam_p->m_uiSubIndex == 0x02)
+                {
+                    Ret = EplObdWriteEntry(0x1F52, 2,
+                                           &EplApiInstance_g.m_InitParam.m_dwApplicationSwTime,
+                                           4);
+                }
+                else
+                {
+                    break;
+                }
+
+
+            }
+            break;
+        }
+#endif // CONFIG_USER_IMAGE_FLASH_ADRS
+
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)
         case 0x1F9F:    // NMT_RequestCmd_REC
         {
