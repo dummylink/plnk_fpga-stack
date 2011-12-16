@@ -3027,9 +3027,13 @@ tEplKernel              Ret;
 
 #ifdef EPL_MODULE_API_PDI
         if ((pObdParam_p->m_uiIndex >= 0x2000)
+#ifdef CONFIG_APP_OBJECTS_PRESET_AT_PCP_ONLY
+             && (pObdParam_p->m_uiIndex != 0x5011)
 #ifdef CONFIG_USE_SDC_OBJECTS
              && (pObdParam_p->m_uiIndex != 0x5020)
-#endif
+#endif //CONFIG_USE_SDC_OBJECTS
+#endif // CONFIG_MAN_DEV_OBJECTS_PRESET_AT_PCP
+             && (pObdParam_p->m_uiIndex != 0x5011)
             )
         {
             // prepare for default OBD access
