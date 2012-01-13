@@ -136,10 +136,6 @@ typedef tEplKernel (* tEplDllkCbProcessTpdo) (tEplFrameInfo * pFrameInfo_p, BOOL
 //---------------------------------------------------------------------------
 // global vars
 //---------------------------------------------------------------------------
-#ifdef CONFIG_USE_SDC_OBJECTS
-extern QWORD qwSocRelativeTime_g;
-extern BOOL fSocRelTimeValid_g;
-#endif //CONFIG_USE_SDC_OBJECTS
 
 //---------------------------------------------------------------------------
 // function prototypes

@@ -329,15 +329,16 @@ typedef struct
     DWORD               m_dwPrcPResFallBackTimeout;
 #endif
 
+#if EPL_DLL_SOCTIME_FORWARD == TRUE
+    tEplSocTimeStamp    m_socTimeStamp;         // timestamps of last SoC frame
+#endif
+
 } tEplDllkInstance;
+
 
 //---------------------------------------------------------------------------
 // global vars
 //---------------------------------------------------------------------------
-#ifdef CONFIG_USE_SDC_OBJECTS
-QWORD qwSocRelativeTime_g = 0;
-BOOL  fSocRelTimeValid_g = FALSE;
-#endif //CONFIG_USE_SDC_OBJECTS
 
 //---------------------------------------------------------------------------
 // local vars
@@ -2616,7 +2617,11 @@ unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCyc
 
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
+#if EPL_DLL_SOCTIME_FORWARD == TRUE
+        Ret = EplDllkInstance_g.m_pfnCbSync(EplDllkInstance_g.m_socTimeStamp);
+#else
         Ret = EplDllkInstance_g.m_pfnCbSync();
+#endif
         if (Ret == kEplReject)
         {
             fReadyFlag = FALSE;
@@ -4639,9 +4644,9 @@ static tEplKernel EplDllkProcessReceivedSoc(tEdrvRxBuffer* pRxBuffer_p, tEplNmtS
 {
 tEplKernel      Ret = kEplSuccessful;
 
-#ifdef CONFIG_USE_SDC_OBJECTS
+#if EPL_DLL_SOCTIME_FORWARD == TRUE
 tEplFrame*      pFrame;
-#endif //CONFIG_USE_SDC_OBJECTS
+#endif
 
 #if EPL_DLL_PRES_READY_AFTER_SOC != FALSE
 tEdrvTxBuffer*  pTxBuffer = NULL;
@@ -4697,30 +4702,34 @@ tEdrvTxBuffer*  pTxBuffer = NULL;
         }
     }
 
-#ifdef CONFIG_USE_SDC_OBJECTS
-    // get the relative time from the SoC frame
-    // TODO: remove global variables
+#if EPL_DLL_SOCTIME_FORWARD == TRUE
+    // Save timestamps of SoC frame
     pFrame = (tEplFrame *) pRxBuffer_p->m_pbBuffer;
 
     if (NmtState_p == kEplNmtCsOperational)
     {
-        if (fSocRelTimeValid_g == FALSE)
+        EplDllkInstance_g.m_socTimeStamp.m_netTime.m_dwSec =
+                AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwSec));
+        EplDllkInstance_g.m_socTimeStamp.m_netTime.m_dwNanoSec =
+                AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwNanoSec));
+
+        if (EplDllkInstance_g.m_socTimeStamp.m_fSocRelTimeValid == FALSE)
         {
             // from the first change in the SoC time stamp it is considered valid
-            if (qwSocRelativeTime_g != pFrame->m_Data.m_Soc.m_le_RelativeTime)
+            if (EplDllkInstance_g.m_socTimeStamp.m_qwRelTime != AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime)))
             {
-                fSocRelTimeValid_g = TRUE;
+                EplDllkInstance_g.m_socTimeStamp.m_fSocRelTimeValid = TRUE;
             }
         }
         // save Soc Relative Time
-        qwSocRelativeTime_g = pFrame->m_Data.m_Soc.m_le_RelativeTime;
+        EplDllkInstance_g.m_socTimeStamp.m_qwRelTime = AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime));
     }
     else
     {
         // SoC time stamp only valid in Operational
-        fSocRelTimeValid_g = FALSE;
+        EplDllkInstance_g.m_socTimeStamp.m_fSocRelTimeValid = FALSE;
     }
-#endif //CONFIG_USE_SDC_OBJECTS
+#endif
 
     // reprogram timer
 #if EPL_TIMER_USE_HIGHRES != FALSE

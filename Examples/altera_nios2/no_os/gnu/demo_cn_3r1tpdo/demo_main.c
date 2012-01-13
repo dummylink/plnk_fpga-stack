@@ -23,8 +23,12 @@
 
 tEplKernel PUBLIC  EplObdInitRam (tEplObdInitParam MEM* pInitParam_p);
 
-
+#if EPL_DLL_SOCTIME_FORWARD == TRUE
+tEplKernel PUBLIC AppCbSync(tEplSocTimeStamp socTimeStamp_p);
+#else
 tEplKernel PUBLIC AppCbSync(void);
+#endif
+
 tEplKernel PUBLIC AppCbEvent(
     tEplApiEventType        EventType_p,   // IN: event type (enum)
     tEplApiEventArg*        pEventArg_p,   // IN: event argument (union)
@@ -473,8 +477,11 @@ Exit:
 // State:
 //
 //---------------------------------------------------------------------------
-
+#if EPL_DLL_SOCTIME_FORWARD == TRUE
+tEplKernel PUBLIC AppCbSync(tEplSocTimeStamp socTimeStamp_p)
+#else
 tEplKernel PUBLIC AppCbSync(void)
+#endif
 {
 	tEplKernel EplRet = kEplSuccessful;
     int        nIdx;

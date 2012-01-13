@@ -204,6 +204,9 @@
 // Disable deferred release of rx-buffers until Edrv for openMAC supports it
 #define EPL_DLL_DISABLE_DEFERRED_RXFRAME_RELEASE    TRUE
 
+// Enable forwarding of SoC timestamps
+#define EPL_DLL_SOCTIME_FORWARD         TRUE
+
 
 // =========================================================================
 // OBD specific defines
@@ -251,6 +254,9 @@
 
 //#define EPL_API_PROCESS_IMAGE_SIZE_IN 0 //disable
 //#define EPL_API_PROCESS_IMAGE_SIZE_OUT 0 //disable
+
+
+#define CONFIG_USE_SDC_OBJECTS
 
 #endif //_EPLCFG_H_
 

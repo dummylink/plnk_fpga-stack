@@ -149,6 +149,12 @@ typedef struct
 
 } tEplNetTime;
 
+typedef struct
+{
+    tEplNetTime             m_netTime;
+    QWORD                   m_qwRelTime;
+    BOOL                    m_fSocRelTimeValid;
+} tEplSocTimeStamp;
 
 // forward declaration of target specific timestamp
 typedef struct _tEplTgtTimeStamp tEplTgtTimeStamp;
