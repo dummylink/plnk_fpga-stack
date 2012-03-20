@@ -24,7 +24,7 @@
 tEplKernel PUBLIC  EplObdInitRam (tEplObdInitParam MEM* pInitParam_p);
 
 #if EPL_DLL_SOCTIME_FORWARD == TRUE
-tEplKernel PUBLIC AppCbSync(tEplSocTimeStamp socTimeStamp_p);
+tEplKernel PUBLIC AppCbSync(tEplSocTimeStamp SocTimeStamp_p);
 #else
 tEplKernel PUBLIC AppCbSync(void);
 #endif
@@ -478,7 +478,7 @@ Exit:
 //
 //---------------------------------------------------------------------------
 #if EPL_DLL_SOCTIME_FORWARD == TRUE
-tEplKernel PUBLIC AppCbSync(tEplSocTimeStamp socTimeStamp_p)
+tEplKernel PUBLIC AppCbSync(tEplSocTimeStamp SocTimeStamp_p)
 #else
 tEplKernel PUBLIC AppCbSync(void)
 #endif

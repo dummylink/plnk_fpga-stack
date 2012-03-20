@@ -312,7 +312,7 @@ typedef struct
 
 // callback function to get informed about sync event
 #if EPL_DLL_SOCTIME_FORWARD == TRUE
-typedef tEplKernel (PUBLIC* tEplSyncCb) (tEplSocTimeStamp socTimeStamp);
+typedef tEplKernel (PUBLIC* tEplSyncCb) (tEplSocTimeStamp SocTimeStamp);
 #else
 typedef tEplKernel (PUBLIC* tEplSyncCb) (void);
 #endif

@@ -330,7 +330,7 @@ typedef struct
 #endif
 
 #if EPL_DLL_SOCTIME_FORWARD == TRUE
-    tEplSocTimeStamp    m_socTimeStamp;         // timestamps of last SoC frame
+    tEplSocTimeStamp    m_SocTimeStamp;         // timestamps of last SoC frame
 #endif
 
 } tEplDllkInstance;
@@ -2618,7 +2618,7 @@ unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCyc
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
 #if EPL_DLL_SOCTIME_FORWARD == TRUE
-        Ret = EplDllkInstance_g.m_pfnCbSync(EplDllkInstance_g.m_socTimeStamp);
+        Ret = EplDllkInstance_g.m_pfnCbSync(EplDllkInstance_g.m_SocTimeStamp);
 #else
         Ret = EplDllkInstance_g.m_pfnCbSync();
 #endif
@@ -4708,26 +4708,26 @@ tEdrvTxBuffer*  pTxBuffer = NULL;
 
     if (NmtState_p == kEplNmtCsOperational)
     {
-        EplDllkInstance_g.m_socTimeStamp.m_netTime.m_dwSec =
+        EplDllkInstance_g.m_SocTimeStamp.m_netTime.m_dwSec =
                 AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwSec));
-        EplDllkInstance_g.m_socTimeStamp.m_netTime.m_dwNanoSec =
+        EplDllkInstance_g.m_SocTimeStamp.m_netTime.m_dwNanoSec =
                 AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwNanoSec));
 
-        if (EplDllkInstance_g.m_socTimeStamp.m_fSocRelTimeValid == FALSE)
+        if (EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid == FALSE)
         {
             // from the first change in the SoC time stamp it is considered valid
-            if (EplDllkInstance_g.m_socTimeStamp.m_qwRelTime != AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime)))
+            if (EplDllkInstance_g.m_SocTimeStamp.m_qwRelTime != AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime)))
             {
-                EplDllkInstance_g.m_socTimeStamp.m_fSocRelTimeValid = TRUE;
+                EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid = TRUE;
             }
         }
         // save Soc Relative Time
-        EplDllkInstance_g.m_socTimeStamp.m_qwRelTime = AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime));
+        EplDllkInstance_g.m_SocTimeStamp.m_qwRelTime = AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime));
     }
     else
     {
         // SoC time stamp only valid in Operational
-        EplDllkInstance_g.m_socTimeStamp.m_fSocRelTimeValid = FALSE;
+        EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid = FALSE;
     }
 #endif
 

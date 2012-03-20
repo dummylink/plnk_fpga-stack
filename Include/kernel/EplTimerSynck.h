@@ -113,5 +113,9 @@ tEplKernel PUBLIC EplTimerSynckTriggerAtTimeStamp(tEplTgtTimeStamp* pTimeStamp_p
 
 tEplKernel PUBLIC EplTimerSynckStopSync(void);
 
+void PUBLIC EplTimerSynckCompareTogPdiIntEnable (DWORD wSyncIntCycle_p);
+
+void PUBLIC EplTimerSynckCompareTogPdiIntDisable (void);
+
 
 #endif  // #ifndef _EPLTIMERSYNCK_H_
