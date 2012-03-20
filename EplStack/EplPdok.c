@@ -587,8 +587,8 @@ unsigned int        uiMappObjectCount;
         }
 
 #ifdef EPL_MODULE_API_PDI
-        // acknowledge all RPDO PDI buffer right after write access
-        Gi_signalPdiPdoWriteAccess();
+        // acknowledge (update) the RPDO PDI buffer right after write access
+        Gi_signalPdiPdoWriteAccess((BYTE) uiChannelId);
 #endif
 
         // processing finished successfully
@@ -704,8 +704,8 @@ unsigned int        uiMappObjectCount;
         AmiSetByteToLe(&pFrame_p->m_Data.m_Pres.m_le_bPdoVersion, pPdoChannel->m_bMappingVersion);
 
 #ifdef EPL_MODULE_API_PDI
-        // acknowledge all RPDO PDI buffer right before read access
-        Gi_preparePdiPdoReadAccess();
+        // acknowledge (update) the TPDO PDI buffer right before read access
+        Gi_preparePdiPdoReadAccess((BYTE) uiChannelId);
 #endif
         // process mapping
         for (uiMappObjectCount = pPdoChannel->m_uiMappObjectCount, pMappObject = EplPdokInstance_g.m_paTxObject[uiChannelId];
