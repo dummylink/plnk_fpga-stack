@@ -3136,11 +3136,11 @@ tEplObdSize     Size;
                 // normalize access type
                 AccessType_p = 0;
             }
-#endif // EPL_MODULE_API_PDI
+
 
             switch (AccessType_p)
             {
-#ifdef EPL_MODULE_API_PDI
+
                 case kEplObdAccRead:
                 {
                     // TPDO address requested
@@ -3156,12 +3156,13 @@ tEplObdSize     Size;
                     pData = ((tEplObdVarEntry MEM*) pData)->m_pDataMapRPdo;
                     break;
                 }
-#endif // EPL_MODULE_API_PDI
+
                 case 0:
                 {
                     // No PDI address present or requested
                     // The data pointer is stored in VarEntry->m_pData
                     pData = ((tEplObdVarEntry MEM*) pData)->m_pData;
+
                     break;
                 }
 
@@ -3172,6 +3173,11 @@ tEplObdSize     Size;
                     break;
                 }
             }
+#else
+            // The data pointer is stored in VarEntry->m_pData
+            pData = ((tEplObdVarEntry MEM*) pData)->m_pData;
+
+#endif // EPL_MODULE_API_PDI
         }
 
         // the default pointer is stored for strings in tEplObdVString
