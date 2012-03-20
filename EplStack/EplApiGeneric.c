@@ -1885,7 +1885,7 @@ tEplApiEventType    EventType;
                 pObdParam->m_dwAbortCode = EPL_SDOAC_DATA_NOT_TRANSF_DUE_LOCAL_CONTROL;
             }
 
-            printf("EplApiProcessEvent(0x%04X/%u Ev=%X pData=%p Off=%u Size=%u\n"
+            PRINTF("EplApiProcessEvent(0x%04X/%u Ev=%X pData=%p Off=%u Size=%u\n"
                    "                   ObjSize=%u TransSize=%u Acc=%X Typ=%X)\n",
                 pObdParam->m_uiIndex, pObdParam->m_uiSubIndex,
                 pObdParam->m_ObdEvent,
@@ -1928,7 +1928,7 @@ tEplApiEventType    EventType;
 Exit:
     if (Ret != kEplSuccessful)
     {
-        printf("ERROR: %s failed!\n", __func__);
+        PRINTF("ERROR: %s failed!\n", __func__);
     }
     return Ret;
 }

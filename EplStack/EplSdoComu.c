@@ -2221,7 +2221,7 @@ BYTE            bFlag;
             Ret = EplSdoAsySeqSendData(pSdoComCon_p->m_SdoSeqConHdl,
                                                 uiSizeOfFrame,
                                                 pFrame);
-            printf("ERROR: SDO Aborted!\n");
+            DEBUG_LVL_25_TRACE0("ERROR: SDO Aborted!\n");
 
             break;
         }
@@ -2293,7 +2293,7 @@ tEplSdoComCon*  pSdoComCon;
     }
 
 //Exit:
-    //printf("Abort code: 0x%08x Ret: 0x%04x\n", pObdParam_p->m_dwAbortCode, Ret);
+    //PRINTF("Abort code: 0x%08x Ret: 0x%04x\n", pObdParam_p->m_dwAbortCode, Ret);
     return Ret;
 }
 #endif
@@ -2977,7 +2977,7 @@ unsigned int    uiSizeOfFrame;
                                         pFrame);
             if (Ret == kEplSdoSeqConnectionBusy)
             {
-                PRINTF2("%s tried to send abort 0x%lX while connection is already closed\n",
+                DEBUG_LVL_25_TRACE2("%s tried to send abort 0x%lX while connection is already closed\n",
                     __func__, (unsigned long) dwAbortCode_p);
                 Ret = kEplSuccessful;
             }
