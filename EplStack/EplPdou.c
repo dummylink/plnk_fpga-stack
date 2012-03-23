@@ -1083,7 +1083,7 @@ void*               pVar;
     if (((uiBitSize & 0x7) != 0x0)
         && ((uiBitSize != 1) || (ObdType != kEplObdTypBool)))
     {   // bit mapping is not supported, except for BOOLEAN objects on byte boundaries
-        *pdwAbortCode_p = EPL_SDOAC_GENERAL_ERROR;
+        *pdwAbortCode_p = EPL_SDOAC_OBJECT_NOT_MAPPABLE;
         Ret = kEplPdoGranularityMismatch;
         goto Exit;
     }
@@ -1123,7 +1123,7 @@ void*               pVar;
     ObdSize = EplObduGetDataSize(uiIndex, uiSubIndex);
     if (ObdSize < uiByteSize)
     {   // object does not exist or has smaller size
-        *pdwAbortCode_p = EPL_SDOAC_GENERAL_ERROR;
+        *pdwAbortCode_p = EPL_SDOAC_OBJECT_NOT_MAPPABLE;
         Ret = kEplPdoSizeMismatch;
     }
 
@@ -1139,7 +1139,7 @@ void*               pVar;
     {
         // object is numerical,
         // therefor size has to fit, but it does not.
-        *pdwAbortCode_p = EPL_SDOAC_GENERAL_ERROR;
+        *pdwAbortCode_p = EPL_SDOAC_OBJECT_NOT_MAPPABLE;
         Ret = kEplPdoVarNotFound;
         goto Exit;
     }

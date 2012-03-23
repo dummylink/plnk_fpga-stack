@@ -2254,7 +2254,7 @@ tEplObdEvent            OrgObdEvent;
     if ((Access & kEplObdAccConst) != 0)
     {
         Ret = kEplObdAccessViolation;
-        pObdParam_p->m_dwAbortCode = EPL_SDOAC_UNSUPPORTED_ACCESS;
+        pObdParam_p->m_dwAbortCode = EPL_SDOAC_WRITE_TO_READ_ONLY_OBJ;
         goto Exit;
     }
 
@@ -2388,9 +2388,18 @@ tEplObdEvent            OrgObdEvent;
             || (pObdParam_p->m_TransferSize != pObdParam_p->m_SegmentSize)
             || (pObdParam_p->m_SegmentSize != pObdParam_p->m_ObjSize)))
     {
-        // type is numerical, therefor size has to fit, but it does not.
-        Ret = kEplObdValueLengthError;
-        pObdParam_p->m_dwAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_NOT_MATCH;
+        // type is numerical, therefore size has to fit, but it does not.
+        Ret = kEplObdNumValSizeMismatch;
+
+        if (pObdParam_p->m_TransferSize < ObdSize)
+        {
+            pObdParam_p->m_dwAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_TOO_LOW;
+        }
+        else
+        {
+            pObdParam_p->m_dwAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_NOT_MATCH;
+        }
+
         goto Exit;
     }
 
@@ -2462,6 +2471,32 @@ tEplKernel              Ret;
         Ret = EplObdCheckObjectRange (pSubEntry_p, pObdParam_p->m_pData);
         if (Ret != kEplSuccessful)
         {
+            switch (Ret)
+            {
+                case kEplObdValueTooLow:
+                {
+                    pObdParam_p->m_dwAbortCode = EPL_SDOAC_VALUE_RANGE_TOO_LOW;
+                    break;
+                }
+
+                case kEplObdValueTooHigh:
+                {
+                    pObdParam_p->m_dwAbortCode = EPL_SDOAC_VALUE_RANGE_TOO_HIGH;
+                    break;
+                }
+
+                case kEplObdUnknownObjectType:
+                {
+                    pObdParam_p->m_dwAbortCode = EPL_SDOAC_UNSUPPORTED_ACCESS;
+                    break;
+                }
+
+                default:
+                {
+                    break;
+                }
+            }
+
             goto Exit;
         }
     }
@@ -2612,9 +2647,18 @@ BOOL                    fEntryNumerical;
             || ((pObdParam_p->m_SegmentSize > pObdParam_p->m_ObjSize)
                 && (pObdParam_p->m_TransferSize != 0))))
     {
-        // type is numerical, therefor size has to fit, but it does not.
+        // type is numerical, therefore size has to fit, but it does not.
         Ret = kEplObdNumValSizeMismatch;
-        pObdParam_p->m_dwAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_NOT_MATCH;
+
+        if (pObdParam_p->m_TransferSize < ObdSize)
+        {
+            pObdParam_p->m_dwAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_TOO_LOW;
+        }
+        else
+        {
+            pObdParam_p->m_dwAbortCode = EPL_SDOAC_DATA_TYPE_LENGTH_NOT_MATCH;
+        }
+
         goto Exit;
     }
 

@@ -1617,7 +1617,7 @@ tEplApiEventArg     EventArg;
             break;
         }
 
-#ifdef CONFIG_USER_IMAGE_FLASH_ADRS
+#ifdef CONFIG_USER_IMAGE_IN_FLASH
         case 0x1F52:    // PDL_LocVerApplSw_REC
         {
             if ((pParam_p->m_ObdEvent == kEplObdEvPreRead))
@@ -1643,7 +1643,7 @@ tEplApiEventArg     EventArg;
             }
             break;
         }
-#endif // CONFIG_USER_IMAGE_FLASH_ADRS
+#endif // CONFIG_USER_IMAGE_IN_FLASH
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)
         case 0x1F9F:    // NMT_RequestCmd_REC
