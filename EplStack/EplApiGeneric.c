@@ -841,8 +841,9 @@ Exit:
 //
 // Parameters:  uiObjIndex_p    = Function maps variables for this object index
 //              pVarTPdo_p      = Pointer to data memory area for the specified object if its accessed as TPDO
+//                                This address needs to be size (word or dword) aligned, depending on pEntrySize_p.
 //              pVarRPdo_p      = Pointer to data memory area for the specified object if its accessed as RPDO
-
+//                                This address needs to be size (word or dword) aligned, depending on pEntrySize_p.
 //              pEntrySize_p    = IN: pointer to size of one entry;
 //                                    if size is zero, the actual size will be read from OD
 //                                OUT: pointer to entire size of all entries mapped
