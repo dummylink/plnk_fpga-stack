@@ -87,15 +87,6 @@
 // const defines
 //---------------------------------------------------------------------------
 
-// float definitions and macros
-#define _SHIFTED_EXPONENT_MASK_SP   0xff
-#define _BIAS_SP                    126
-#define T_SP                        23
-#define EXPONENT_DENORM_SP          (-_BIAS_SP)
-#define BASE_TO_THE_T_SP            ((float) 8388608.0)
-#define GET_EXPONENT_SP(x)          ((((x) >> T_SP) & _SHIFTED_EXPONENT_MASK_SP) - _BIAS_SP)
-
-
 //---------------------------------------------------------------------------
 // local types
 //---------------------------------------------------------------------------
@@ -2423,7 +2414,7 @@ tEplObdEvent            OrgObdEvent;
     *ppDstData_p = pDstData;
 
     // all checks are done
-    // the caller may now convert the numerial source value to platform byte order in a temporary buffer
+    // the caller may now convert the numerical source value to platform byte order in a temporary buffer
 
 Exit:
 
@@ -2815,8 +2806,8 @@ void * pData;
             }
             else
             {
-                // The current position is not decleared. The string
-                // is located in ROM, therefor use default pointer.
+                // The current position is not declared. The string
+                // is located in ROM, therefore use default pointer.
                 pData = (void *) pSubIndexEntry_p->m_pDefault;
                 if ((CONST void ROM*) pData != (CONST void ROM*) NULL)
                 {
@@ -2841,8 +2832,8 @@ void * pData;
             }
             else
             {
-                // The current position is not decleared. The string
-                // is located in ROM, therefor use default pointer.
+                // The current position is not declared. The string
+                // is located in ROM, therefore use default pointer.
                 pData = (void *) pSubIndexEntry_p->m_pDefault;
                 if ((CONST void ROM*) pData != (CONST void ROM*) NULL)
                 {

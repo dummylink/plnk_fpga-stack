@@ -171,6 +171,45 @@ static void getMacAdrs(char *ifName, BYTE *macAdrs)
 }
 
 //---------------------------------------------------------------------------
+// Function:            getLinkStatus
+//
+// Description:         get link status of interface
+//
+// Parameters:          ifName  device name of ethernet interface
+//
+// Returns:             TRUE if link is up or FALSE otherwise
+//---------------------------------------------------------------------------
+static int getLinkStatus(char *ifName)
+{
+    BOOL            fRunning;
+    struct ifreq    ethreq;
+    int             fd;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    memset(&ethreq, 0, sizeof(ethreq));
+
+    /* set the name of the interface we wish to check */
+    strncpy(ethreq.ifr_name, ifName, IFNAMSIZ);
+
+    /* grab flags associated with this interface */
+    ioctl(fd, SIOCGIFFLAGS, &ethreq);
+
+    if (ethreq.ifr_flags & IFF_RUNNING)
+    {
+        fRunning = TRUE;
+    }
+    else
+    {
+        fRunning = FALSE;
+    }
+
+    close(fd);
+
+    return fRunning;
+}
+
+//---------------------------------------------------------------------------
 // Function:    EdrvInit
 //
 // Description: function for init of the Ethernet controller
@@ -323,26 +362,38 @@ tEplKernel EdrvSendTxMsg(tEdrvTxBuffer *pBuffer_p)
         goto Exit;
     }
 
-    pthread_mutex_lock(&EdrvInstance_l.m_mutex);
-    if (EdrvInstance_l.m_pTransmittedTxBufferLastEntry == NULL)
+    if (getLinkStatus(EdrvInstance_l.m_initParam.m_HwParam.m_pszDevName) == FALSE)
     {
-        EdrvInstance_l.m_pTransmittedTxBufferLastEntry =
-            EdrvInstance_l.m_pTransmittedTxBufferFirstEntry = pBuffer_p;
+        /* there's no link! We pretend that packet is sent and immediately call
+         * tx handler! Otherwise the stack would hang! */
+        if (pBuffer_p->m_pfnTxHandler != NULL)
+        {
+            pBuffer_p->m_pfnTxHandler(pBuffer_p);
+        }
     }
     else
     {
-        EdrvInstance_l.m_pTransmittedTxBufferLastEntry->m_BufferNumber.m_pVal = pBuffer_p;
-        EdrvInstance_l.m_pTransmittedTxBufferLastEntry = pBuffer_p;
-    }
-    pthread_mutex_unlock(&EdrvInstance_l.m_mutex);
+        pthread_mutex_lock(&EdrvInstance_l.m_mutex);
+        if (EdrvInstance_l.m_pTransmittedTxBufferLastEntry == NULL)
+        {
+            EdrvInstance_l.m_pTransmittedTxBufferLastEntry =
+                EdrvInstance_l.m_pTransmittedTxBufferFirstEntry = pBuffer_p;
+        }
+        else
+        {
+            EdrvInstance_l.m_pTransmittedTxBufferLastEntry->m_BufferNumber.m_pVal = pBuffer_p;
+            EdrvInstance_l.m_pTransmittedTxBufferLastEntry = pBuffer_p;
+        }
+        pthread_mutex_unlock(&EdrvInstance_l.m_mutex);
 
-    iRet = pcap_sendpacket(EdrvInstance_l.m_pPcap, pBuffer_p->m_pbBuffer,
-                           (int) pBuffer_p->m_uiTxMsgLen);
-    if  (iRet != 0)
-    {
-        EPL_DBGLVL_EDRV_TRACE3("%s() pcap_sendpacket returned %d (%s)\n",
-                __func__, iRet, pcap_geterr(EdrvInstance_l.m_pPcap));
-        Ret = kEplInvalidOperation;
+        iRet = pcap_sendpacket(EdrvInstance_l.m_pPcap, pBuffer_p->m_pbBuffer,
+                               (int) pBuffer_p->m_uiTxMsgLen);
+        if  (iRet != 0)
+        {
+            EPL_DBGLVL_EDRV_TRACE3("%s() pcap_sendpacket returned %d (%s)\n",
+                    __func__, iRet, pcap_geterr(EdrvInstance_l.m_pPcap));
+            Ret = kEplInvalidOperation;
+        }
     }
 
 Exit:
@@ -569,6 +620,8 @@ static void EdrvPacketHandler(u_char *pUser_p,
 //---------------------------------------------------------------------------
 static void * EdrvWorkerThread(void *pArgument_p)
 {
+    int PcapRet;
+
     tEdrvInstance*  pInstance = (tEdrvInstance *)pArgument_p;
     char sErr_Msg[ PCAP_ERRBUF_SIZE ];
 
@@ -596,10 +649,27 @@ static void * EdrvWorkerThread(void *pArgument_p)
    /* signal that thread is successfully started */
    sem_post(&pInstance->m_syncSem);
 
-   if (pcap_loop (pInstance->m_pPcapThread, -1, EdrvPacketHandler, (u_char*)pInstance) < 0)
+   PcapRet  = pcap_loop (pInstance->m_pPcapThread, -1, EdrvPacketHandler, (u_char*)pInstance);
+
+   switch( PcapRet )
    {
-       EPL_DBGLVL_ERROR_TRACE1("%s() pcap_loop error or terminated!\n", __func__);
+       case 0:
+           EPL_DBGLVL_ERROR_TRACE1("%s(): pcap_loop ended because 'cnt' is exhausted.\n", __func__);
+           break;
+
+       case -1:
+           EPL_DBGLVL_ERROR_TRACE1("%s(): pcap_loop ended because of an error!\n", __func__);
+           break;
+
+       case -2:
+           EPL_DBGLVL_ERROR_TRACE1("%s(): pcap_loop ended normally.\n", __func__);
+           break;
+
+       default:
+           EPL_DBGLVL_ERROR_TRACE1("%s(): pcap_loop ended (unknown return value).\n", __func__);
+           break;
    }
+
    return NULL;
 }
 

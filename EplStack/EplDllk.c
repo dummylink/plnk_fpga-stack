@@ -542,7 +542,7 @@ tEdrvInitParam  EdrvInitParam;
 #if EPL_TIMER_USE_HIGHRES != FALSE
     Ret = EplTimerHighReskInit();
     if (Ret != kEplSuccessful)
-    {   // error occured while initializing high resolution timer module
+    {   // error occurred while initializing high resolution timer module
         goto Exit;
     }
 #endif
@@ -550,7 +550,7 @@ tEdrvInitParam  EdrvInitParam;
 #if (EPL_DLL_PROCESS_SYNC == EPL_DLL_PROCESS_SYNC_ON_TIMER)
     Ret = EplTimerSynckAddInstance();
     if (Ret != kEplSuccessful)
-    {   // error occured while initializing sync timer module
+    {   // error occurred while initializing sync timer module
         goto Exit;
     }
 
@@ -607,7 +607,7 @@ tEdrvInitParam  EdrvInitParam;
 //    EdrvInitParam.m_pfnTxHandler = EplDllkCbFrameTransmitted;
     Ret = EdrvInit(&EdrvInitParam);
     if (Ret != kEplSuccessful)
-    {   // error occured while initializing ethernet driver
+    {   // error occurred while initializing ethernet driver
         goto Exit;
     }
 
@@ -1558,7 +1558,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
     uiFrameSize = EPL_C_DLL_MINSIZE_IDENTRES;
     Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeAsnd, kEplDllAsndIdentResponse);
     if (Ret != kEplSuccessful)
-    {   // error occured while registering Tx frame
+    {   // error occurred while registering Tx frame
         goto Exit;
     }
 
@@ -1566,7 +1566,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
     uiFrameSize = EPL_C_DLL_MINSIZE_STATUSRES;
     Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeAsnd, kEplDllAsndStatusResponse);
     if (Ret != kEplSuccessful)
-    {   // error occured while registering Tx frame
+    {   // error occurred while registering Tx frame
         goto Exit;
     }
 
@@ -1575,7 +1575,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
     uiFrameSize = EPL_C_DLL_MINSIZE_SYNCRES;
     Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeAsnd, kEplDllAsndSyncResponse);
     if (Ret != kEplSuccessful)
-    {   // error occured while registering Tx frame
+    {   // error occurred while registering Tx frame
         goto Exit;
     }
 #endif
@@ -1588,7 +1588,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         uiFrameSize = EplDllkInstance_g.m_DllConfigParam.m_uiPresActPayloadLimit + EPL_FRAME_OFFSET_PDO_PAYLOAD;
         Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypePres, kEplDllAsndNotDefined);
         if (Ret != kEplSuccessful)
-        {   // error occured while registering Tx frame
+        {   // error occurred while registering Tx frame
             goto Exit;
         }
 
@@ -1605,7 +1605,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
     uiFrameSize = EPL_C_IP_MAX_MTU;
     Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeAsnd, kEplDllAsndNmtRequest);
     if (Ret != kEplSuccessful)
-    {   // error occured while registering Tx frame
+    {   // error occurred while registering Tx frame
         goto Exit;
     }
     // mark Tx buffer as empty
@@ -1619,7 +1619,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
     uiFrameSize = EPL_C_IP_MAX_MTU;
     Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeNonEpl, kEplDllAsndNotDefined);
     if (Ret != kEplSuccessful)
-    {   // error occured while registering Tx frame
+    {   // error occurred while registering Tx frame
         goto Exit;
     }
     // mark Tx buffer as empty
@@ -1796,7 +1796,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         uiFrameSize = EPL_C_DLL_MINSIZE_SOC;
         Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeSoc, kEplDllAsndNotDefined);
         if (Ret != kEplSuccessful)
-        {   // error occured while registering Tx frame
+        {   // error occurred while registering Tx frame
             goto Exit;
         }
         EplDllkInstance_g.m_pTxBuffer[uiHandle].m_pfnTxHandler = EplDllkCbTransmittedSoc;
@@ -1807,7 +1807,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         uiFrameSize = EPL_C_DLL_MINSIZE_SOA;
         Ret = EplDllkCreateTxFrame(&uiHandle, &uiFrameSize, kEplMsgTypeSoa, kEplDllAsndNotDefined);
         if (Ret != kEplSuccessful)
-        {   // error occured while registering Tx frame
+        {   // error occurred while registering Tx frame
             goto Exit;
         }
         EplDllkInstance_g.m_pTxBuffer[uiHandle].m_pfnTxHandler = EplDllkCbTransmittedSoa;
@@ -2083,39 +2083,39 @@ unsigned int    uiHandle;
     // delete Tx frames
     Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_IDENTRES);
     if (Ret != kEplSuccessful)
-    {   // error occured while deregistering Tx frame
+    {   // error occurred while deregistering Tx frame
         goto Exit;
     }
 
     Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_STATUSRES);
     if (Ret != kEplSuccessful)
-    {   // error occured while deregistering Tx frame
+    {   // error occurred while deregistering Tx frame
         goto Exit;
     }
 
     Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_PRES);
     if (Ret != kEplSuccessful)
-    {   // error occured while deregistering Tx frame
+    {   // error occurred while deregistering Tx frame
         goto Exit;
     }
 
     Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_NMTREQ);
     if (Ret != kEplSuccessful)
-    {   // error occured while deregistering Tx frame
+    {   // error occurred while deregistering Tx frame
         goto Exit;
     }
 
 #if EPL_DLL_PRES_CHAINING_CN != FALSE
     Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_SYNCRES);
     if (Ret != kEplSuccessful)
-    {   // error occured while deregistering Tx frame
+    {   // error occurred while deregistering Tx frame
         goto Exit;
     }
 #endif
 
     Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_NONEPL);
     if (Ret != kEplSuccessful)
-    {   // error occured while deregistering Tx frame
+    {   // error occurred while deregistering Tx frame
         goto Exit;
     }
 
@@ -2125,13 +2125,13 @@ unsigned int    uiHandle;
 
         Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_SOC);
         if (Ret != kEplSuccessful)
-        {   // error occured while deregistering Tx frame
+        {   // error occurred while deregistering Tx frame
             goto Exit;
         }
 
         Ret = EplDllkDeleteTxFrame(EPL_DLLK_TXFRAME_SOA);
         if (Ret != kEplSuccessful)
-        {   // error occured while deregistering Tx frame
+        {   // error occurred while deregistering Tx frame
             goto Exit;
         }
 
@@ -2145,7 +2145,7 @@ unsigned int    uiHandle;
                 {
                     Ret = EplDllkDeleteTxFrame(uiHandle);
                     if (Ret != kEplSuccessful)
-                    {   // error occured while deregistering Tx frame
+                    {   // error occurred while deregistering Tx frame
                         goto Exit;
                     }
                 }
@@ -2934,6 +2934,9 @@ tEdrvTxBuffer*  pTxBuffer;
 unsigned int    uiFrameSize;
 unsigned int    uiFrameCount;
 unsigned int    uiNextTxBufferOffset;
+#if (EDRV_AUTO_RESPONSE != FALSE)
+unsigned int    uiFilterEntry;
+#endif
 
     // fill TxBuffer of specified priority with new frame if empty
 
@@ -2944,143 +2947,90 @@ unsigned int    uiNextTxBufferOffset;
         {
             uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetNmtReq;
             pTxBuffer = &EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_NMTREQ + uiNextTxBufferOffset];
-            if (pTxBuffer->m_pbBuffer != NULL)
-            {   // NmtRequest does exist
-                // check if frame is empty and not being filled
-                if (pTxBuffer->m_uiTxMsgLen == EPL_DLLK_BUFLEN_EMPTY)
-                {
-                    // mark Tx buffer as filling is in process
-                    pTxBuffer->m_uiTxMsgLen = EPL_DLLK_BUFLEN_FILLING;
-                    // set max buffer size as input parameter
-                    uiFrameSize = pTxBuffer->m_uiMaxBufferLen;
-                    // copy frame from shared loop buffer to Tx buffer
-                    Ret = EplDllkCalAsyncGetTxFrame(
-                        pTxBuffer->m_pbBuffer, &uiFrameSize, AsyncReqPriority_p);
-                    if (Ret == kEplSuccessful)
-                    {
-                        pTxFrame = (tEplFrame *) pTxBuffer->m_pbBuffer;
-                        Ret = EplDllkCheckFrame(pTxFrame, uiFrameSize);
-
-                        // set buffer valid
-                        pTxBuffer->m_uiTxMsgLen = uiFrameSize;
-
 #if (EDRV_AUTO_RESPONSE != FALSE)
-                        if ((NmtState_p & (EPL_NMT_TYPE_MASK | EPL_NMT_SUPERSTATE_MASK)) == (EPL_NMT_TYPE_CS | EPL_NMT_CS_EPLMODE))
-                        {
-                            // update Tx buffer in Edrv
-                            Ret = EdrvUpdateTxMsgBuffer(pTxBuffer);
-
-                            // enable corresponding Rx filter
-                            EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_SOA_NMTREQ].m_fEnable = TRUE;
-                            Ret = EdrvChangeFilter(EplDllkInstance_g.m_aFilter,
-                                                   EPL_DLLK_FILTER_COUNT,
-                                                   EPL_DLLK_FILTER_SOA_NMTREQ,
-                                                   EDRV_FILTER_CHANGE_STATE);
-                            if (Ret != kEplSuccessful)
-                            {
-                                goto Exit;
-                            }
-                        }
+	    uiFilterEntry = EPL_DLLK_FILTER_SOA_NMTREQ;
 #endif
-                    }
-                    else if (Ret == kEplDllAsyncTxBufferEmpty)
-                    {   // empty Tx buffer is not a real problem
-                        // so just ignore it
-                        Ret = kEplSuccessful;
-                        // mark Tx buffer as empty
-                        pTxBuffer->m_uiTxMsgLen = EPL_DLLK_BUFLEN_EMPTY;
-
-#if (EDRV_AUTO_RESPONSE != FALSE)
-                        if ((NmtState_p & (EPL_NMT_TYPE_MASK | EPL_NMT_SUPERSTATE_MASK)) == (EPL_NMT_TYPE_CS | EPL_NMT_CS_EPLMODE))
-                        {
-                            // disable corresponding Rx filter
-                            EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_SOA_NMTREQ].m_fEnable = FALSE;
-                            Ret = EdrvChangeFilter(EplDllkInstance_g.m_aFilter,
-                                                   EPL_DLLK_FILTER_COUNT,
-                                                   EPL_DLLK_FILTER_SOA_NMTREQ,
-                                                   EDRV_FILTER_CHANGE_STATE);
-                            if (Ret != kEplSuccessful)
-                            {
-                                goto Exit;
-                            }
-                        }
-#endif
-                    }
-                }
-            }
-            break;
-        }
+	    break;
+	}
 
         default:    // generic priority
         {
             uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetNonEpl;
             pTxBuffer = &EplDllkInstance_g.m_pTxBuffer[EPL_DLLK_TXFRAME_NONEPL + uiNextTxBufferOffset];
-            if (pTxBuffer->m_pbBuffer != NULL)
-            {   // non-EPL frame does exist
-                // check if frame is empty and not being filled
-                if (pTxBuffer->m_uiTxMsgLen == EPL_DLLK_BUFLEN_EMPTY)
-                {
-                    // mark Tx buffer as filling is in process
-                    pTxBuffer->m_uiTxMsgLen = EPL_DLLK_BUFLEN_FILLING;
-                    // set max buffer size as input parameter
-                    uiFrameSize = pTxBuffer->m_uiMaxBufferLen;
-                    // copy frame from shared loop buffer to Tx buffer
-                    Ret = EplDllkCalAsyncGetTxFrame(
-                        pTxBuffer->m_pbBuffer, &uiFrameSize, AsyncReqPriority_p);
-                    if (Ret == kEplSuccessful)
-                    {
-                        pTxFrame = (tEplFrame *) pTxBuffer->m_pbBuffer;
-                        Ret = EplDllkCheckFrame(pTxFrame, uiFrameSize);
+#if (EDRV_AUTO_RESPONSE != FALSE)
+	    uiFilterEntry = EPL_DLLK_FILTER_SOA_NONEPL;
+#endif
+	    break;
+	}
+    }
 
-                        // set buffer valid
-                        pTxBuffer->m_uiTxMsgLen = uiFrameSize;
+    if (pTxBuffer->m_pbBuffer != NULL)
+    {   // NmtRequest or non-EPL frame does exist
+	// check if frame is empty and not being filled
+	if (pTxBuffer->m_uiTxMsgLen == EPL_DLLK_BUFLEN_EMPTY)
+	{
+	    // mark Tx buffer as filling is in process
+	    pTxBuffer->m_uiTxMsgLen = EPL_DLLK_BUFLEN_FILLING;
+	    // set max buffer size as input parameter
+	    uiFrameSize = pTxBuffer->m_uiMaxBufferLen;
+	    // copy frame from shared loop buffer to Tx buffer
+	    Ret = EplDllkCalAsyncGetTxFrame(
+		pTxBuffer->m_pbBuffer, &uiFrameSize, AsyncReqPriority_p);
+	    if (Ret == kEplSuccessful)
+	    {
+		pTxFrame = (tEplFrame *) pTxBuffer->m_pbBuffer;
+		Ret = EplDllkCheckFrame(pTxFrame, uiFrameSize);
+
+		// set buffer valid
+		pTxBuffer->m_uiTxMsgLen = uiFrameSize;
 
 #if (EDRV_AUTO_RESPONSE != FALSE)
-                        if ((NmtState_p & (EPL_NMT_TYPE_MASK | EPL_NMT_SUPERSTATE_MASK)) == (EPL_NMT_TYPE_CS | EPL_NMT_CS_EPLMODE))
-                        {
-                            // update Tx buffer in Edrv
-                            Ret = EdrvUpdateTxMsgBuffer(pTxBuffer);
+		if ((NmtState_p & (EPL_NMT_TYPE_MASK | EPL_NMT_SUPERSTATE_MASK)) == (EPL_NMT_TYPE_CS | EPL_NMT_CS_EPLMODE))
+		{
+		    // update Tx buffer in Edrv
+		    Ret = EdrvUpdateTxMsgBuffer(pTxBuffer);
 
-                            // enable corresponding Rx filter
-                            EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_SOA_NONEPL].m_fEnable = TRUE;
-                            Ret = EdrvChangeFilter(EplDllkInstance_g.m_aFilter,
-                                                   EPL_DLLK_FILTER_COUNT,
-                                                   EPL_DLLK_FILTER_SOA_NONEPL,
-                                                   EDRV_FILTER_CHANGE_STATE);
-                            if (Ret != kEplSuccessful)
-                            {
-                                goto Exit;
-                            }
-                        }
+		    // enable corresponding Rx filter
+		    EplDllkInstance_g.m_aFilter[uiFilterEntry].m_fEnable = TRUE;
+		    Ret = EdrvChangeFilter(EplDllkInstance_g.m_aFilter,
+					   EPL_DLLK_FILTER_COUNT,
+					   uiFilterEntry,
+					   EDRV_FILTER_CHANGE_STATE);
+		    if (Ret != kEplSuccessful)
+		    {
+			goto Exit;
+		    }
+		}
 #endif
-                    }
-                    else if (Ret == kEplDllAsyncTxBufferEmpty)
-                    {   // empty Tx buffer is not a real problem
-                        // so just ignore it
-                        Ret = kEplSuccessful;
-                        // mark Tx buffer as empty
-                        pTxBuffer->m_uiTxMsgLen = EPL_DLLK_BUFLEN_EMPTY;
+	    }
+	    else if (Ret == kEplDllAsyncTxBufferEmpty)
+	    {   // empty Tx buffer is not a real problem
+		// so just ignore it
+		Ret = kEplSuccessful;
+		// mark Tx buffer as empty
+		pTxBuffer->m_uiTxMsgLen = EPL_DLLK_BUFLEN_EMPTY;
 
 #if (EDRV_AUTO_RESPONSE != FALSE)
-                        if ((NmtState_p & (EPL_NMT_TYPE_MASK | EPL_NMT_SUPERSTATE_MASK)) == (EPL_NMT_TYPE_CS | EPL_NMT_CS_EPLMODE))
-                        {
-                            // disable corresponding Rx filter
-                            EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_SOA_NONEPL].m_fEnable = FALSE;
-                            Ret = EdrvChangeFilter(EplDllkInstance_g.m_aFilter,
-                                                   EPL_DLLK_FILTER_COUNT,
-                                                   EPL_DLLK_FILTER_SOA_NONEPL,
-                                                   EDRV_FILTER_CHANGE_STATE);
-                            if (Ret != kEplSuccessful)
-                            {
-                                goto Exit;
-                            }
-                        }
+		if ((NmtState_p & (EPL_NMT_TYPE_MASK | EPL_NMT_SUPERSTATE_MASK)) == (EPL_NMT_TYPE_CS | EPL_NMT_CS_EPLMODE))
+		{
+		    // disable corresponding Rx filter
+		    EplDllkInstance_g.m_aFilter[uiFilterEntry].m_fEnable = FALSE;
+		    Ret = EdrvChangeFilter(EplDllkInstance_g.m_aFilter,
+					   EPL_DLLK_FILTER_COUNT,
+					   uiFilterEntry,
+					   EDRV_FILTER_CHANGE_STATE);
+		    if (Ret != kEplSuccessful)
+		    {
+			goto Exit;
+		    }
+		}
 #endif
-                    }
-                }
-            }
-            break;
-        }
+	    }
+	    else
+	    {
+		goto Exit;
+	    }
+	}
     }
 
     if ((NmtState_p == kEplNmtCsBasicEthernet) || (NmtState_p == kEplNmtMsBasicEthernet))
@@ -3166,9 +3116,7 @@ unsigned int    uiNextTxBufferOffset;
 
     }
 
-#if (EDRV_AUTO_RESPONSE != FALSE)
 Exit:
-#endif
     return Ret;
 }
 
@@ -6355,7 +6303,7 @@ unsigned int    nIndex = 0;
 
         Ret = EdrvAllocTxMsgBuffer(pTxBuffer);
         if (Ret != kEplSuccessful)
-        {   // error occured while registering Tx frame
+        {   // error occurred while registering Tx frame
             goto Exit;
         }
 
@@ -6585,7 +6533,7 @@ unsigned int    nIndex = 0;
         // delete Tx buffer
         Ret = EdrvReleaseTxMsgBuffer(pTxBuffer);
         if (Ret != kEplSuccessful)
-        {   // error occured while releasing Tx frame
+        {   // error occurred while releasing Tx frame
             goto Exit;
         }
 

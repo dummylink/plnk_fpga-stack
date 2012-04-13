@@ -167,7 +167,7 @@ static tEplKernel PUBLIC EplIdentuCbIdentResponse(tEplFrameInfo * pFrameInfo_p);
 //
 //---------------------------------------------------------------------------
 
-EPLDLLEXPORT tEplKernel PUBLIC EplIdentuInit()
+tEplKernel PUBLIC EplIdentuInit()
 {
 tEplKernel Ret;
 
@@ -195,7 +195,7 @@ tEplKernel Ret;
 //
 //---------------------------------------------------------------------------
 
-EPLDLLEXPORT tEplKernel PUBLIC EplIdentuAddInstance()
+tEplKernel PUBLIC EplIdentuAddInstance()
 {
 tEplKernel Ret;
 
@@ -230,7 +230,7 @@ tEplKernel Ret;
 //
 //---------------------------------------------------------------------------
 
-EPLDLLEXPORT tEplKernel PUBLIC EplIdentuDelInstance()
+tEplKernel PUBLIC EplIdentuDelInstance()
 {
 tEplKernel  Ret;
 
@@ -264,7 +264,7 @@ tEplKernel  Ret;
 //
 //---------------------------------------------------------------------------
 
-EPLDLLEXPORT tEplKernel PUBLIC EplIdentuReset()
+tEplKernel PUBLIC EplIdentuReset()
 {
 tEplKernel  Ret;
 int         iIndex;
@@ -306,7 +306,8 @@ tEplKernel PUBLIC EplIdentuGetIdentResponse(
                                     unsigned int        uiNodeId_p,
                                     tEplIdentResponse** ppIdentResponse_p)
 {
-tEplKernel  Ret;
+    tEplKernel          Ret;
+    tEplIdentResponse*  pIdentResponse;
 
     Ret = kEplSuccessful;
 
@@ -314,7 +315,14 @@ tEplKernel  Ret;
     uiNodeId_p--;
     if (uiNodeId_p < tabentries (EplIdentuInstance_g.m_apIdentResponse))
     {
-        *ppIdentResponse_p = EplIdentuInstance_g.m_apIdentResponse[uiNodeId_p];
+        pIdentResponse      = EplIdentuInstance_g.m_apIdentResponse[uiNodeId_p];
+        *ppIdentResponse_p  = pIdentResponse;
+
+        // Check if ident response is valid, adjust return value otherwise
+        if( NULL == pIdentResponse )
+        {
+            Ret = kEplInvalidOperation;
+        }
     }
     else
     {   // invalid node ID specified

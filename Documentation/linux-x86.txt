@@ -22,7 +22,7 @@ openPOWERLINK on Linux x86
   One of the following network controllers is required to run openPOWERLINK on
   Linux x86.
 
-  - Network controller card with Intel 82573 chip
+  - Network controller card with Intel 82573L (or compatible) 1GBit Ethernet chip
     For example:
     - B&R APC 810 Industrial PC on-board network chip (tested)
 
@@ -39,6 +39,11 @@ openPOWERLINK on Linux x86
       * Longshine LCS-8539TXR
       * Micronet SP160T V3
       * Micronet SP160TA V3
+
+  - Network controller card with Intel 8255x 100MBit Ethernet chip
+    For example:
+    - B&R APC 620 Industrial PC on-board network chip (tested)
+    - Intel Pro 100 82557/8/9/1 Ethernet Interface card (tested)
 
   - Standard Linux network controller through libpcap library
     (for user-space stack version)
@@ -65,6 +70,7 @@ openPOWERLINK on Linux x86
    For the userspace stack, a script setting the priorities is provided in
    Examples/X86/Linux/gnu/tools/set_prio. It increases the thread priorities of
    the high resolution timer and of the Ethernet IRQ threads.
+
 2.4 Libraries and Tools
 
 2.4.1 CMake
@@ -157,7 +163,7 @@ openPOWERLINK on Linux x86
   the kernel based stack or with the userspace stack.
   
   It is found in: 
-  Examples/X86/Linux/gnu/demo_process_image_qt
+  Examples/X86/Generic/demo_process_image_qt
 
 5.4 Console demo with process image
   This demo also implements a POWERLINK MN with CFM. It is implemented as
@@ -166,7 +172,7 @@ openPOWERLINK on Linux x86
   stack or with the userspace stack.
   
   It is located in: 
-  Examples/X86/Linux/gnu/demo_process_image_console 
+  Examples/X86/Generic/demo_process_image_console 
 
 6 Building
 ----------
@@ -230,10 +236,10 @@ openPOWERLINK on Linux x86
                         linking them to the object dictionary a whole process
                         image could be mapped. Process images are required if
                         configurations created by openCONFIGURATOR should be
-						used. openCONFIGURATOR provides the header file xap.h 
-						which defines the structure of the process image. It
-						contains all synchronous data fields supported by the
-						configured CNs.
+                        used. openCONFIGURATOR provides the header file xap.h 
+                        which defines the structure of the process image. It
+                        contains all synchronous data fields supported by the
+                        configured CNs.
 
                         Process images must be enabled for using the process
                         image demo applications. The kernel based demos and
@@ -241,7 +247,7 @@ openPOWERLINK on Linux x86
 
   CFG_X86_LINUX_DEMO_KERNEL
                         If enabled the kernel demo will be compiled.
-                        It cannot be used if CFM_POWERLINK_PROCESS_IMAGE is
+                        It cannot be used if CFG_POWERLINK_PROCESS_IMAGE is
                         enabled!
 
   CFG_X86_LINUX_DEMO_PROCESS_IMAGE_CONSOLE
@@ -249,19 +255,19 @@ openPOWERLINK on Linux x86
                         will be compiled. It can be used either with the kernel
                         stack or with the userspace stack.
 						
-                        Requires: CFM_POWERLINK_CFM, CFM_POWERLINK_PROCESS_IMAGE
+                        Requires: CFG_POWERLINK_CFM, CFG_POWERLINK_PROCESS_IMAGE
 
   CFG_X86_LINUX_DEMO_PROCESS_IMAGE_QT
                         If enabled the process image based QT application
                         will be compiled. It can be used either with the kernel
                         stack or with the userspace stack.
 						
-                        Requires: CFM_POWERLINK_CFM, CFM_POWERLINK_PROCESS_IMAGE
+                        Requires: CFG_POWERLINK_CFM, CFG_POWERLINK_PROCESS_IMAGE
 
   CFG_X86_LINUX_DEMO_QT
                         If enabled the standard QT application will be compiled.
                         It can only be used with the kernel stack.
-                        This option is not allowed if CFM_POWERLINK_PROCESS_IMAGE
+                        This option is not allowed if CFG_POWERLINK_PROCESS_IMAGE
 						is enabled!
 
   CMAKE_INSTALL_PREFIX  Specifies the installation directory where your files

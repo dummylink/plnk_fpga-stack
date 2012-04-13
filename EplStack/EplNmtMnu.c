@@ -146,7 +146,7 @@
 #define EPL_NMTMNU_NODE_FLAG_PRC_RESET_MASK         0x7000
 #endif
 
-// defines for timer arguments to draw a distinction between serveral events
+// defines for timer arguments to draw a distinction between several events
 #define EPL_NMTMNU_TIMERARG_NODE_MASK   0x000000FFL // mask that contains the node-ID
 #define EPL_NMTMNU_TIMERARG_IDENTREQ    0x00010000L // timer event is for IdentRequest
 #define EPL_NMTMNU_TIMERARG_STATREQ     0x00020000L // timer event is for StatusRequest
@@ -156,42 +156,41 @@
 #define EPL_NMTMNU_TIMERARG_COUNT_LO    0x00000C00L // counter for longer timeouts
                     // The counters must have the same position as in the node flags above.
 
-#define EPL_NMTMNU_SET_FLAGS_TIMERARG_STATREQ(pNodeInfo_p, uiNodeId_p, TimerArg_p) \
-    pNodeInfo_p->m_wFlags = \
-        ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_STATREQ) \
-         & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ) \
-        | (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ); \
-    TimerArg_p.m_Arg.m_dwVal = EPL_NMTMNU_TIMERARG_STATREQ | uiNodeId_p | \
-        (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ); \
-    TimerArg_p.m_EventSink = kEplEventSinkNmtMnu;
+#define EPL_NMTMNU_SET_FLAGS_TIMERARG_STATREQ(pNodeInfo_p, uiNodeId_p, TimerArg_p)                  \
+    pNodeInfo_p->m_wFlags       =   ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_STATREQ) &   \
+                                    EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ)                         |   \
+                                    (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ);  \
+    TimerArg_p.m_Arg.m_dwVal    =   EPL_NMTMNU_TIMERARG_STATREQ                                 |   \
+                                    uiNodeId_p                                                  |   \
+                                    (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ);   \
+    TimerArg_p.m_EventSink      =   kEplEventSinkNmtMnu;
 
-#define EPL_NMTMNU_SET_FLAGS_TIMERARG_IDENTREQ(pNodeInfo_p, uiNodeId_p, TimerArg_p) \
-    pNodeInfo_p->m_wFlags = \
-        ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_STATREQ) \
-         & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ) \
-        | (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ); \
-    TimerArg_p.m_Arg.m_dwVal = EPL_NMTMNU_TIMERARG_IDENTREQ | uiNodeId_p | \
-        (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ); \
-    TimerArg_p.m_EventSink = kEplEventSinkNmtMnu;
+#define EPL_NMTMNU_SET_FLAGS_TIMERARG_IDENTREQ(pNodeInfo_p, uiNodeId_p, TimerArg_p)                 \
+    pNodeInfo_p->m_wFlags       =   ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_STATREQ) &   \
+                                    EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ)                         |   \
+                                    (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ);  \
+    TimerArg_p.m_Arg.m_dwVal    =   EPL_NMTMNU_TIMERARG_IDENTREQ                                |   \
+                                    uiNodeId_p                                                  |   \
+                                    (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ);   \
+    TimerArg_p.m_EventSink      =   kEplEventSinkNmtMnu;
 
-#define EPL_NMTMNU_SET_FLAGS_TIMERARG_LONGER(pNodeInfo_p, uiNodeId_p, TimerArg_p) \
-    pNodeInfo_p->m_wFlags = \
-        ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_LONGER) \
-         & EPL_NMTMNU_NODE_FLAG_COUNT_LONGER) \
-        | (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_LONGER); \
-    TimerArg_p.m_Arg.m_dwVal = EPL_NMTMNU_TIMERARG_LONGER | uiNodeId_p | \
-        (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_LONGER); \
-    TimerArg_p.m_EventSink = kEplEventSinkNmtMnu;
+#define EPL_NMTMNU_SET_FLAGS_TIMERARG_LONGER(pNodeInfo_p, uiNodeId_p, TimerArg_p)                   \
+    pNodeInfo_p->m_wFlags       =   ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_LONGER)  &   \
+                                    EPL_NMTMNU_NODE_FLAG_COUNT_LONGER)                          |   \
+                                    (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_LONGER);   \
+    TimerArg_p.m_Arg.m_dwVal    =   EPL_NMTMNU_TIMERARG_LONGER                                  |   \
+                                    uiNodeId_p                                                  |   \
+                                    (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_LONGER);    \
+    TimerArg_p.m_EventSink      =   kEplEventSinkNmtMnu;
 
-#define EPL_NMTMNU_SET_FLAGS_TIMERARG_STATE_MON(pNodeInfo_p, uiNodeId_p, TimerArg_p) \
-    pNodeInfo_p->m_wFlags = \
-        ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_STATREQ) \
-         & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ) \
-        | (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ); \
-    TimerArg_p.m_Arg.m_dwVal = EPL_NMTMNU_TIMERARG_STATE_MON | uiNodeId_p | \
-        (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ); \
-    TimerArg_p.m_EventSink = kEplEventSinkNmtMnu;
-
+#define EPL_NMTMNU_SET_FLAGS_TIMERARG_STATE_MON(pNodeInfo_p, uiNodeId_p, TimerArg_p)                \
+    pNodeInfo_p->m_wFlags       =   ((pNodeInfo_p->m_wFlags + EPL_NMTMNU_NODE_FLAG_INC_STATREQ) &   \
+                                    EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ)                         |   \
+                                    (pNodeInfo_p->m_wFlags & ~EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ);  \
+    TimerArg_p.m_Arg.m_dwVal    =   EPL_NMTMNU_TIMERARG_STATE_MON                               |   \
+                                    uiNodeId_p                                                  |   \
+                                    (pNodeInfo_p->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ);   \
+    TimerArg_p.m_EventSink      =   kEplEventSinkNmtMnu;
 
 // defines for global flags
 #define EPL_NMTMNU_FLAG_HALTED              0x0001  // boot process is halted
@@ -605,7 +604,7 @@ tEplNmtMnuNodeInfo* pNodeInfo;
                     // PRes Chaining is going to be enabled but the appropriate SyncRes
                     // has not been received, yet.
 
-                    // Set the current NMT command if it has higher priortity than a present one.
+                    // Set the current NMT command if it has higher priority than a present one.
                     EplNmtMnuPrcSetFlagsNmtCommandReset(pNodeInfo, NmtCommand_p);
 
                     // Wait for the SyncRes
@@ -969,7 +968,17 @@ Exit:
 
 tEplKernel PUBLIC EplNmtMnuCbNmtStateChange(tEplEventNmtStateChange NmtStateChange_p)
 {
-tEplKernel      Ret = kEplSuccessful;
+    tEplKernel      Ret = kEplSuccessful;
+    BYTE            NewMnNmtState;
+
+    // Save new MN state in object 0x1F8E
+    NewMnNmtState   = (BYTE) NmtStateChange_p.m_NewNmtState;
+
+    Ret = EplObdWriteEntry(0x1F8E, 240, &NewMnNmtState, 1);
+    if(Ret != kEplSuccessful)
+    {
+        return  Ret;
+    }
 
     // do work which must be done in that state
     switch (NmtStateChange_p.m_NewNmtState)
@@ -1071,13 +1080,13 @@ tEplKernel      Ret = kEplSuccessful;
             break;
         }
 
-        // node process isochronus and asynchronus frames
+        // node process isochronous and asynchronous frames
         case kEplNmtCsPreOperational2:
         {
             break;
         }
 
-        // node should be configured und application is ready
+        // node should be configured and application is ready
         case kEplNmtCsReadyToOperate:
         {
             break;
@@ -1090,7 +1099,7 @@ tEplKernel      Ret = kEplSuccessful;
         }
 
         // node stopped by MN
-        // -> only process asynchronus frames
+        // -> only process asynchronous frames
         case kEplNmtCsStopped:
         {
             break;
@@ -1141,7 +1150,7 @@ tEplKernel      Ret = kEplSuccessful;
 */
 
             // inform DLL about NMT state change,
-            // so that it can clear the asynchonous queues and start the reduced cycle
+            // so that it can clear the asynchronous queues and start the reduced cycle
             Event.m_EventSink = kEplEventSinkDllk;
             Event.m_EventType = kEplEventTypeDllkStartReducedCycle;
             EPL_MEMSET(&Event.m_NetTime, 0x00, sizeof(Event.m_NetTime));
@@ -1210,7 +1219,7 @@ tEplKernel      Ret = kEplSuccessful;
             break;
         }
 
-        // node should be configured und application is ready
+        // node should be configured and application is ready
         case kEplNmtMsReadyToOperate:
         {
             // check if PRes of CNs are OK
@@ -1250,7 +1259,7 @@ tEplKernel      Ret = kEplSuccessful;
 //
 // Function:    EplNmtMnuCbCheckEvent
 //
-// Description: callback funktion for NMT events before they are actually executed.
+// Description: callback function for NMT events before they are actually executed.
 //              The EPL API layer must forward NMT events from NmtCnu module.
 //              This module will reject some NMT commands while MN.
 //
@@ -2438,7 +2447,7 @@ tEplNmtMnuNodeInfo* pNodeInfo;
 
                 EplNmtMnuInstance_g.m_uiSignalSlaveCount++;
                 // signal slave counter shall be decremented if timeout elapsed and regardless of an error
-                // mandatory slave counter shall be decremented if timeout elapsed and no error occured
+                // mandatory slave counter shall be decremented if timeout elapsed and no error occurred
             }
         }
     }
@@ -2455,7 +2464,7 @@ Exit:
 // Function:    EplNmtMnuNodeCheckCom
 //
 // Description: checks communication of the specified node.
-//              That means wait some time and if no error occured everything
+//              That means wait some time and if no error occurred everything
 //              is OK.
 //
 // Parameters:  uiNodeId_p              = node ID
@@ -2479,7 +2488,7 @@ tEplTimerArg    TimerArg;
     {   // CN is not async-only and timeout for CheckCom was set
 
         // check communication,
-        // that means wait some time and if no error occured everything is OK;
+        // that means wait some time and if no error occurred everything is OK;
 
         // start timer (when the timer expires the CN must be still ReadyToOp)
         EPL_NMTMNU_SET_FLAGS_TIMERARG_LONGER(
@@ -2595,7 +2604,7 @@ Exit:
 //
 // Parameters:  uiNodeId_p              = node ID
 //              NodeNmtState_p          = NMT state of CN
-//              NodeEvent_p             = occured events
+//              NodeEvent_p             = occurred events
 //
 // Returns:     tEplKernel              = error code
 //
@@ -3382,12 +3391,13 @@ static tEplKernel EplNmtMnuCheckNmtState(
 tEplKernel      Ret = kEplSuccessful;
 tEplKernel      RetUpdate = kEplSuccessful;
 tEplObdSize     ObdSize;
-BYTE            bNmtState;
+BYTE            bNodeNmtState;
+BYTE            bExpNmtState;
 BYTE            bNmtStatePrev;
 tEplNmtState    ExpNmtState;
 
     // compute BYTE of current NMT state
-    bNmtState = ((BYTE) NodeNmtState_p & 0xFF);
+    bNodeNmtState = ((BYTE) NodeNmtState_p & 0xFF);
 
     if (pNodeInfo_p->m_NodeState == kEplNmtMnuNodeStateUnknown)
     {   // CN is already in state unknown, which means that it got
@@ -3398,19 +3408,26 @@ tEplNmtState    ExpNmtState;
 
     ObdSize = 1;
     // read object 0x1F8F NMT_MNNodeExpState_AU8
-    Ret = EplObduReadEntry(0x1F8F, uiNodeId_p, &bNmtState, &ObdSize);
+    Ret = EplObduReadEntry(0x1F8F, uiNodeId_p, &bExpNmtState, &ObdSize);
     if (Ret != kEplSuccessful)
     {
         goto Exit;
     }
 
     // compute expected NMT state
-    ExpNmtState = (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS);
+    ExpNmtState = (tEplNmtState) (bExpNmtState | EPL_NMT_TYPE_CS);
 
     if (ExpNmtState == kEplNmtCsNotActive)
     {   // ignore the current state, because the CN shall be not active
         Ret = kEplReject;
         goto ExitButUpdate;
+    }
+    else if ((ExpNmtState == kEplNmtCsStopped) &&
+            (NodeNmtState_p == kEplNmtCsStopped))
+    {
+        // reset flags ISOCHRON and PREOP2_REACHED
+        pNodeInfo_p->m_wFlags &= ~(EPL_NMTMNU_NODE_FLAG_ISOCHRON
+                                 | EPL_NMTMNU_NODE_FLAG_PREOP2_REACHED);
     }
     else if ((ExpNmtState == kEplNmtCsPreOperational2) &&
              (NodeNmtState_p == kEplNmtCsPreOperational2))
@@ -3449,7 +3466,7 @@ tEplNmtState    ExpNmtState;
         pNodeInfo_p->m_NodeState = kEplNmtMnuNodeStateReadyToOp;
 
         // update object 0x1F8F NMT_MNNodeExpState_AU8 to ReadyToOp
-        Ret = EplObduWriteEntry(0x1F8F, uiNodeId_p, &bNmtState, 1);
+        Ret = EplObduWriteEntry(0x1F8F, uiNodeId_p, &bNodeNmtState, 1);
         if (Ret != kEplSuccessful)
         {
             goto Exit;
@@ -3485,7 +3502,7 @@ tEplNmtState    ExpNmtState;
         }
 
     }
-    else if ((ExpNmtState == kEplNmtCsReadyToOperate)
+    else if ((pNodeInfo_p->m_NodeState == kEplNmtMnuNodeStateComChecked)
              && (NodeNmtState_p == kEplNmtCsOperational))
     {   // CN switched to OPERATIONAL
         pNodeInfo_p->m_NodeState = kEplNmtMnuNodeStateOperational;
@@ -3562,10 +3579,10 @@ ExitButUpdate:
         Ret = RetUpdate;
         goto Exit;
     }
-    if (bNmtState != bNmtStatePrev)
+    if (bNodeNmtState != bNmtStatePrev)
     {
         // update object 0x1F8E NMT_MNNodeCurrState_AU8
-        RetUpdate = EplObduWriteEntry(0x1F8E, uiNodeId_p, &bNmtState, 1);
+        RetUpdate = EplObduWriteEntry(0x1F8E, uiNodeId_p, &bNodeNmtState, 1);
         if (RetUpdate != kEplSuccessful)
         {
             Ret =RetUpdate;

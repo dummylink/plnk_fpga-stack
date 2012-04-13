@@ -93,9 +93,10 @@
 
     #else
         // MSVC needs to include windows.h at first
-        // the following defines ar necessary for function prototypes for waitable timers
+        // the following defines are necessary for function prototypes for waitable timers
         #define _WIN32_WINDOWS 0x0401
-        #define _WIN32_WINNT   0x0400
+        #define _WIN32_WINNT   0x0501
+
         #include <windows.h>
         #include <process.h>
     #endif
@@ -135,13 +136,13 @@
 #include "Debug.h"      // debug definitions
 #include "ftraceDebug.h"
 
-#include "EplErrDef.h"  // EPL error codes for API funtions
+#include "EplErrDef.h"  // EPL error codes for API functions
 
 //---------------------------------------------------------------------------
 // typedef
 //---------------------------------------------------------------------------
 
-// IEEE 1588 conformant net time structure
+// IEEE 1588 conforming net time structure
 typedef struct
 {
     DWORD                   m_dwSec;
@@ -164,7 +165,7 @@ typedef struct _tEplTgtTimeStamp tEplTgtTimeStamp;
 typedef struct
 {
     unsigned int    m_uiDevNumber;  // device number for selecting Ethernet controller
-    char*           m_pszDevName;   // device name (valid if non-null)
+    const char*     m_pszDevName;   // device name (valid if non-null)
 
 } tEplHwParam;
 

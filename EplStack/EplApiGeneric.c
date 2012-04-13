@@ -599,6 +599,11 @@ tEplKernel      Ret = kEplSuccessful;
 //    PRINTF1("EplStatusuDelInstance():  0x%X\n", Ret);
 #endif
 
+#if EPL_NMTMNU_PRES_CHAINING_MN != FALSE
+    // deinitialize Sync module
+    Ret = EplSyncuDelInstance();
+#endif
+
     // deinitialize EplNmtCnu module
 #if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_CN)) != 0)
     Ret = EplNmtCnuDelInstance();
@@ -668,6 +673,9 @@ tEplKernel      Ret = kEplSuccessful;
 #if EPL_USE_SHAREDBUFF != FALSE
     ShbExit();
 #endif
+
+    // deinitialize Obd module
+    Ret = EplObdDeleteInstance();
 
     return Ret;
 }
@@ -2068,7 +2076,7 @@ tEplApiEventArg     EventArg;
         //-----------------------------------------------------------
         // CN part of the state machine
 
-        // node liste for EPL-Frames and check timeout
+        // node list for EPL-Frames and check timeout
         case kEplNmtCsNotActive:
         {
             // indicate completion of reset in NMT_ResetCmd_U8
@@ -2088,13 +2096,13 @@ tEplApiEventArg     EventArg;
             break;
         }
 
-        // node process isochronus and asynchronus frames
+        // node process isochronous and asynchronous frames
         case kEplNmtCsPreOperational2:
         {
             break;
         }
 
-        // node should be configured und application is ready
+        // node should be configured and application is ready
         case kEplNmtCsReadyToOperate:
         {
             break;
@@ -2107,7 +2115,7 @@ tEplApiEventArg     EventArg;
         }
 
         // node stopped by MN
-        // -> only process asynchronus frames
+        // -> only process asynchronous frames
         case kEplNmtCsStopped:
         {
             break;
@@ -2141,7 +2149,7 @@ tEplApiEventArg     EventArg;
             break;
         }
 
-        // node should be configured und application is ready
+        // node should be configured and application is ready
         case kEplNmtMsReadyToOperate:
         {
             break;

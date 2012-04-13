@@ -9,7 +9,7 @@
             EPL_OBD_SUBINDEX_RAM_USERDEF_NOINIT(0x1C00, 0x01, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, CumulativeCnt_U32)
             EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C00, 0x02, kEplObdTypUInt32, kEplObdAccR, tEplObdUnsigned32, ThresholdCnt_U32, 0x0)
             EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C00, 0x03, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, Threshold_U32, 15)
-        EPL_OBD_END_INDEX(0x1C0F)
+        EPL_OBD_END_INDEX(0x1C00)
 
         // Object 1C02h: DLL_MNCycTimeExceed_REC
         EPL_OBD_BEGIN_INDEX_RAM(0x1C02, 0x04, NULL)
@@ -17,7 +17,7 @@
             EPL_OBD_SUBINDEX_RAM_USERDEF_NOINIT(0x1C02, 0x01, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, CumulativeCnt_U32)
             EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C02, 0x02, kEplObdTypUInt32, kEplObdAccR, tEplObdUnsigned32, ThresholdCnt_U32, 0x0)
             EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C02, 0x03, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, Threshold_U32, 15)
-        EPL_OBD_END_INDEX(0x1C0F)
+        EPL_OBD_END_INDEX(0x1C02)
 
         // Object 1C07h: DLL_MNCNLossPResCumCnt_AU32
         EPL_OBD_RAM_INDEX_RAM_VARARRAY_NOINIT(0x1C07, 254, NULL, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, DLL_MNCNLossPResCumCnt_AU32)
@@ -47,15 +47,15 @@
 
         // Object 1C0Fh: DLL_CNCRCError_REC
         EPL_OBD_BEGIN_INDEX_RAM(0x1C0F, 0x04, NULL)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1C0F, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x03)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1C0F, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 3)
             EPL_OBD_SUBINDEX_RAM_USERDEF_NOINIT(0x1C0F, 0x01, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, CumulativeCnt_U32)
-            EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C0F, 0x02, kEplObdTypUInt32, kEplObdAccR, tEplObdUnsigned32, ThresholdCnt_U32, 0x0)
+            EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C0F, 0x02, kEplObdTypUInt32, kEplObdAccR, tEplObdUnsigned32, ThresholdCnt_U32, 0)
             EPL_OBD_SUBINDEX_RAM_USERDEF(0x1C0F, 0x03, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, Threshold_U32, 15)
         EPL_OBD_END_INDEX(0x1C0F)
 
-        // Object 1C14h: DLL_LossOfFrameTolerance_U32 in [ns]
+        // Object 1C14h: DLL_LossOfSocTolerance_U32 in [ns]
         EPL_OBD_BEGIN_INDEX_RAM(0x1C14, 0x01, EplApiCbObdAccess)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1C14, 0x00, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, LossOfFrameTolerance, 300000)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1C14, 0x00, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, LossOfSocTolerance, 100000)
         EPL_OBD_END_INDEX(0x1C14)
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
@@ -75,22 +75,6 @@
         EPL_OBD_RAM_INDEX_RAM_ARRAY(0x1F26, EPL_NMT_MAX_NODE_ID, NULL, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, CFM_ExpConfDateList_AU32, 0)
         EPL_OBD_RAM_INDEX_RAM_ARRAY(0x1F27, EPL_NMT_MAX_NODE_ID, NULL, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, CFM_ExpConfTimeList_AU32, 0)
 #endif
-
-#ifdef CONFIG_USER_IMAGE_IN_FLASH
-        // firmware update related objects
-        // Object 1F51h: PDL_ProgCtrl_AU8
-        EPL_OBD_BEGIN_INDEX_RAM(0x1F51, 0x02, EplApiCbObdAccess)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F51, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x01)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F51, 0x01, kEplObdTypUInt8, kEplObdAccRW, tEplObdUnsigned8, ProgCtrl, 0x00)
-        EPL_OBD_END_INDEX(0x1F51)
-
-        // Object 1F52h: PDL_LocVerApplSw_REC
-        EPL_OBD_BEGIN_INDEX_RAM(0x1F52, 0x03, EplApiCbObdAccess)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F52, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x02)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F52, 0x01, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, ApplSwDate_U32, 0x00)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F52, 0x02, kEplObdTypUInt32, kEplObdAccRW, tEplObdUnsigned32, ApplSwTime_U32, 0x00)
-        EPL_OBD_END_INDEX(0x1F52)
-#endif // CONFIG_USER_IMAGE_IN_FLASH
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)
         // Object 1F80h: NMT_StartUp_U32
@@ -123,7 +107,7 @@
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x05)
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x01, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, MNWaitNotAct_U32, 1000000)        // in [us]
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x02, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, MNTimeoutPreOp1_U32, 500000)      // in [us]
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x03, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, MNWaitPreOp1_U32, 1000000)         // in [us]
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x03, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, MNWaitPreOp1_U32, 500000)         // in [us]
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x04, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, MNTimeoutPreOp2_U32, 5000000)      // in [us]
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F89, 0x05, kEplObdTypUInt32, kEplObdAccSRW, tEplObdUnsigned32, MNTimeoutReadyToOp_U32, 500000)   // in [us]
         EPL_OBD_END_INDEX(0x1F89)
@@ -141,7 +125,7 @@
 
         // Object 1F8Ch: NMT_CurrNMTState_U8
         EPL_OBD_BEGIN_INDEX_RAM(0x1F8C, 0x01, NULL)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F8C, 0x00, kEplObdTypUInt8, (kEplObdAccR | kEplObdAccPdo), tEplObdUnsigned8, NMT_CurrNMTState_U8, 0x00)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F8C, 0x00, kEplObdTypUInt8, (kEplObdAccR | kEplObdAccPdo), tEplObdUnsigned8, NMT_CurrNMTState_U8, 0x1C)
         EPL_OBD_END_INDEX(0x1F8C)
 
 #if EPL_NMT_MAX_NODE_ID > 0
@@ -175,14 +159,14 @@
         EPL_OBD_BEGIN_INDEX_RAM(0x1F98, 0x0E, NULL)
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x00, kEplObdTypUInt8, kEplObdAccConst, tEplObdUnsigned8, NumberOfEntries, 0x0E)
 #endif
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x01, kEplObdTypUInt16, kEplObdAccCR, tEplObdUnsigned16, IsochrTxMaxPayload_U16, CONFIG_ISOCHR_TX_MAX_PAYLOAD)
-            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x02, kEplObdTypUInt16, kEplObdAccCR, tEplObdUnsigned16, IsochrRxMaxPayload_U16, CONFIG_ISOCHR_RX_MAX_PAYLOAD)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x01, kEplObdTypUInt16, kEplObdAccR, tEplObdUnsigned16, IsochrTxMaxPayload_U16, 0x00)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x02, kEplObdTypUInt16, kEplObdAccR, tEplObdUnsigned16, IsochrRxMaxPayload_U16, 0x00)
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x03, kEplObdTypUInt32, kEplObdAccR, tEplObdUnsigned32, PResMaxLatency_U32, 0x00)     // in [ns]
-            EPL_OBD_SUBINDEX_RAM_VAR_RG(0x1F98, 0x04, kEplObdTypUInt16, kEplObdAccSGRW, tEplObdUnsigned16, PReqActPayloadLimit_U16, 36, 36, CONFIG_ISOCHR_RX_MAX_PAYLOAD)
-            EPL_OBD_SUBINDEX_RAM_VAR_RG(0x1F98, 0x05, kEplObdTypUInt16, kEplObdAccSGRW, tEplObdUnsigned16, PResActPayloadLimit_U16, 36, 36, CONFIG_ISOCHR_TX_MAX_PAYLOAD)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x04, kEplObdTypUInt16, kEplObdAccSRW, tEplObdUnsigned16, PReqActPayloadLimit_U16, 36)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x05, kEplObdTypUInt16, kEplObdAccSRW, tEplObdUnsigned16, PResActPayloadLimit_U16, 36)
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x06, kEplObdTypUInt32, kEplObdAccR, tEplObdUnsigned32, ASndMaxLatency_U32, 0x00)     // in [ns]
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x07, kEplObdTypUInt8, kEplObdAccSRW, tEplObdUnsigned8, MultiplCycleCnt_U8, 0x00)
-            EPL_OBD_SUBINDEX_RAM_VAR_RG(0x1F98, 0x08, kEplObdTypUInt16, kEplObdAccSGRW, tEplObdUnsigned16, AsyncMTU_U16, EPL_C_DLL_MIN_ASYNC_MTU, EPL_C_DLL_MIN_ASYNC_MTU, EPL_C_DLL_MAX_ASYNC_MTU)
+            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x08, kEplObdTypUInt16, kEplObdAccSRW, tEplObdUnsigned16, AsyncMTU_U16, EPL_C_DLL_MIN_ASYNC_MTU)
 //            EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x09, kEplObdTypUInt16, kEplObdAccRW, tEplObdUnsigned16, Prescaler_U16, 0x02)
 #if EPL_DLL_PRES_CHAINING_CN != FALSE
             EPL_OBD_SUBINDEX_RAM_VAR(0x1F98, 0x0A, kEplObdTypUInt8, kEplObdAccR, tEplObdUnsigned8, PResMode_U8, 0x00)
@@ -201,12 +185,9 @@
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
         // Object 1F9Ah: NMT_HostName_VS
         EPL_OBD_BEGIN_INDEX_RAM(0x1F9A, 0x01, NULL)
-           EPL_OBD_SUBINDEX_RAM_VSTRING(0x1F9A, 0x00, kEplObdAccRW, host_name, 33, "")
+           EPL_OBD_SUBINDEX_RAM_VSTRING(0x1F9A, 0x00, kEplObdAccR, host_name, 33, "")
         EPL_OBD_END_INDEX(0x1F9A)
 #endif
-
-        // Object 1F9Bh: NMT_MultiplCycleAssign_AU8
-        EPL_OBD_RAM_INDEX_RAM_ARRAY(0x1F9B, 254, NULL, kEplObdTypUInt8, kEplObdAccSRW, tEplObdUnsigned8, NMT_MultiplCycleAssign_AU8, 0)
 
         // Object 1F9Eh: NMT_ResetCmd_U8
         EPL_OBD_BEGIN_INDEX_RAM(0x1F9E, 0x01, EplApiCbObdAccess)

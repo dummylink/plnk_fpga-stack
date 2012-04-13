@@ -611,7 +611,7 @@ unsigned int        uiMappObjectCount;
             // copy object from process/OD variable to RPDO
             Ret = EplPdokCopyVarFromPdo(&pFrame_p->m_Data.m_Pres.m_le_abPayload[0], pMappObject);
             if (Ret != kEplSuccessful)
-            {   // other fatal error occured
+            {   // other fatal error occurred
                 goto Exit;
             }
 
@@ -751,7 +751,7 @@ unsigned int        uiMappObjectCount;
             // copy object from process/OD variable to TPDO
             Ret = EplPdokCopyVarToPdo(&pFrame_p->m_Data.m_Pres.m_le_abPayload[0], pMappObject);
             if (Ret != kEplSuccessful)
-            {   // other fatal error occured
+            {   // other fatal error occurred
                 goto Exit;
             }
 

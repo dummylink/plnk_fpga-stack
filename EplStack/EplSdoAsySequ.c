@@ -5,7 +5,7 @@
 
   Project:      openPOWERLINK
 
-  Description:  source file for asychronous SDO Sequence Layer module
+  Description:  source file for asynchronous SDO Sequence Layer module
 
   License:
 
@@ -101,10 +101,10 @@
 
 #define EPL_SEQ_NUM_THRESHOLD       100     // threshold which distinguishes between old and new sequence numbers
 
-// define frame with size of Asnd-Header-, SDO Sequenze Header size, SDO Command header
+// define frame with size of Asnd-Header-, SDO Sequence Header size, SDO Command header
 // and Ethernet-Header size
 #define EPL_SEQ_FRAME_SIZE          24
-// size of the header of the asynchronus SDO Sequence layer
+// size of the header of the asynchronous SDO Sequence layer
 #define EPL_SEQ_HEADER_SIZE         4
 
 // buffersize for one frame in history
@@ -117,7 +117,7 @@
 // local types
 //---------------------------------------------------------------------------
 
-// events for processfunction
+// events for process function
 typedef enum
 {
     kAsySdoSeqEventNoEvent  =   0x00,   // no Event
@@ -141,7 +141,7 @@ typedef struct
 
 }tEplAsySdoConHistory;
 
-// state of the statemaschine
+// state of the statemachine
 typedef enum
 {
     kEplAsySdoStateIdle         = 0x00,
@@ -244,12 +244,12 @@ static tEplKernel EplSdoAsySeqSetTimer(tEplAsySdoSeqCon* pAsySdoSeqCon_p,
 /***************************************************************************/
 /*                                                                         */
 /*                                                                         */
-/*          C L A S S  <EPL asychronus SDO Sequence layer>                 */
+/*          C L A S S  <EPL asynchronous SDO Sequence layer>                 */
 /*                                                                         */
 /*                                                                         */
 /***************************************************************************/
 //
-// Description: this module contains the asynchronus SDO Sequence Layer for
+// Description: this module contains the asynchronous SDO Sequence Layer for
 //              the EPL SDO service
 //
 //
@@ -319,7 +319,7 @@ tEplKernel  Ret;
 
     Ret = kEplSuccessful;
 
-    // check functionpointer
+    // check function pointer
     if(fpSdoComCb_p == NULL)
     {
         Ret = kEplSdoSeqMissCb;
@@ -330,7 +330,7 @@ tEplKernel  Ret;
         AsySdoSequInstance_g.m_fpSdoComReceiveCb = fpSdoComCb_p;
     }
 
-    // check functionpointer
+    // check function pointer
     if(fpSdoComConCb_p == NULL)
     {
         Ret = kEplSdoSeqMissCb;
@@ -341,7 +341,7 @@ tEplKernel  Ret;
         AsySdoSequInstance_g.m_fpSdoComConCb = fpSdoComConCb_p;
     }
 
-    // set controllstructure to 0
+    // set control structure to 0
     EPL_MEMSET(&AsySdoSequInstance_g.m_AsySdoConnection[0], 0x00, sizeof(AsySdoSequInstance_g.m_AsySdoConnection));
 
 #if defined(WIN32) || defined(_WIN32)
@@ -474,7 +474,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
     EplSdoAsySeqAppFlowControl(FALSE, FALSE);
 
     // check SdoType
-    // call init function of the protcol abstraction layer
+    // call init function of the protocol abstraction layer
     // which tries to find an existing connection to the same node
     switch (SdoType)
     {
@@ -490,6 +490,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
             }
 #else
             Ret = kEplSdoSeqUnsupportedProt;
+            goto Exit;
 #endif
             break;
         }
@@ -506,6 +507,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
             }
 #else
             Ret = kEplSdoSeqUnsupportedProt;
+            goto Exit;
 #endif
             break;
         }
@@ -619,14 +621,14 @@ Exit:
 //
 // Function:    EplSdoAsySeqSendData
 //
-// Description: send sata unsing a established connection
+// Description: send data using an established connection
 //
 //
 //
 // Parameters:  pSdoSeqConHdl_p = connection handle
 //              uiDataSize_p    = Size of Frame to send
-//                                  -> wihtout SDO sequence layer header, Asnd header
-//                                     and ethernetnet
+//                                  -> without SDO sequence layer header, Asnd header
+//                                     and ethernet
 //                                  ==> SDO Sequence layer payload
 //              SdoType          = Type of the SDO connection
 //
@@ -675,8 +677,8 @@ Exit:
 //
 // Function:    EplSdoAsySeqProcessEvent
 //
-// Description: function processes extern events
-//              -> later needed for timeout controll with timer-module
+// Description: function processes external events
+//              -> later needed for timeout control with timer-module
 //
 //
 //
@@ -745,7 +747,7 @@ unsigned int        uiCount;
     }
 
 
-    // process event and call processfunction if needed
+    // process event and call process function if needed
     Ret = EplSdoAsySeqProcess(uiCount,
                                 0,
                                 NULL,
@@ -856,7 +858,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
 
     if (pAsySdoSeqCon->m_uiUseCount == 0)
     {
-        // process close in processfunction
+        // process close in process function
         Ret = EplSdoAsySeqProcess(uiHandle,
                                     0,
                                     NULL,
@@ -882,7 +884,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
         // delete timer
         EplTimeruDeleteTimer(&pAsySdoSeqCon->m_EplTimerHdl);
 
-        // clean controllstructure
+        // clean control structure
         EPL_MEMSET(pAsySdoSeqCon, 0x00, sizeof(tEplAsySdoSeqCon));
         pAsySdoSeqCon->m_SdoConHistory.m_bFreeEntries = EPL_SDO_HISTORY_SIZE;
     }
@@ -902,8 +904,8 @@ Exit:
 //
 // Function:    EplEplSdoAsySeqProcess
 //
-// Description: intern function to process the asynchronus SDO Sequence Layer
-//              state maschine
+// Description: intern function to process the asynchronous SDO Sequence Layer
+//              state machine
 //
 //
 //
@@ -1690,7 +1692,7 @@ unsigned int        uiFreeEntries;
                     uiFreeEntries = EplSdoAsyGetFreeEntriesFromHistory(pAsySdoSeqCon);
                     if ((uiFreeEntries < EPL_SDO_HISTORY_SIZE)
                         && (pAsySdoSeqCon->m_uiRetryCount < EPL_SEQ_RETRY_COUNT))
-                    {   // unacknowlegded frames in history
+                    {   // unacknowledged frames in history
                         // and retry counter not exceeded
 
                         // resend data with acknowledge request
@@ -1997,7 +1999,7 @@ unsigned int    uiFreeEntries = 0;
         }
     }
 
-    // fillin header informations
+    // filling header informations
     // set service id sdo
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_le_bServiceId, 0x05);
     AmiSetByteToLe( &pEplFrame->m_Data.m_Asnd.m_Payload.m_SdoSequenceFrame.m_le_abReserved,0x00);
@@ -2155,7 +2157,7 @@ tEplAsySdoSeqCon*   pAsySdoSeqCon;
 
         EPL_DBGLVL_SDO_TRACE2("Handle: 0x%x , First Databyte 0x%x\n", ConHdl_p,((BYTE*)pSdoSeqData_p)[0]);
 
-        // search controll structure for this connection
+        // search control structure for this connection
         pAsySdoSeqCon = &AsySdoSequInstance_g.m_AsySdoConnection[uiCount];
         while (uiCount < EPL_MAX_SDO_SEQ_CON)
         {
@@ -2307,7 +2309,7 @@ tEplAsySdoConHistory*   pHistory;
         // store size
         pHistory->m_auiFrameSize[pHistory->m_bWrite] = uiSize_p;
 
-        // decremend number of free bufferentries
+        // decrement number of free bufferentries
         pHistory->m_bFreeEntries--;
 
         // increment writeindex
@@ -2334,7 +2336,7 @@ Exit:
 //
 // Function:        EplSdoAsyAckFrameToHistory
 //
-// Description:     function to delete acknowledged frames fron history buffer
+// Description:     function to delete acknowledged frames from history buffer
 //
 //
 //
@@ -2481,7 +2483,7 @@ tEplAsySdoConHistory*   pHistory;
 //
 // Function:        EplSdoAsyGetFreeEntriesFromHistory
 //
-// Description:     function returns the number of free histroy entries
+// Description:     function returns the number of free history entries
 //
 //
 //
@@ -2507,7 +2509,7 @@ unsigned int uiFreeEntries;
 //
 // Function:        EplSdoAsySeqSetTimer
 //
-// Description:     function sets or modify timer in timermosule
+// Description:     function sets or modify timer in timermodule
 //
 //
 //
@@ -2537,7 +2539,7 @@ tEplTimerArg    TimerArg;
                                     TimerArg);
     }
     else
-    {   // modify exisiting timer
+    {   // modify existing timer
         Ret = EplTimeruModifyTimerMs(&pAsySdoSeqCon_p->m_EplTimerHdl,
                                     ulTimeout,
                                     TimerArg);

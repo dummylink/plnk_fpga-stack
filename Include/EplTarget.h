@@ -88,7 +88,7 @@
 #if (TARGET_SYSTEM == _WIN32_)
 
     #define _WIN32_WINDOWS 0x0401
-    #define _WIN32_WINNT   0x0400
+    #define _WIN32_WINNT   0x0501
 
     #include <stdlib.h>
     #include <stdio.h>
@@ -221,6 +221,19 @@
         #define PRINTF4(arg,p1,p2,p3,p4)    PRINTF(arg,p1,p2,p3,p4)
     #endif
 
+#elif (TARGET_SYSTEM == _VXWORKS_)
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <string.h>
+
+    #ifndef PRINTF0
+        #define PRINTF                      printf
+        #define PRINTF0(arg)                PRINTF(arg)
+        #define PRINTF1(arg,p1)             PRINTF(arg,p1)
+        #define PRINTF2(arg,p1,p2)          PRINTF(arg,p1,p2)
+        #define PRINTF3(arg,p1,p2,p3)       PRINTF(arg,p1,p2,p3)
+        #define PRINTF4(arg,p1,p2,p3,p4)    PRINTF(arg,p1,p2,p3,p4)
+    #endif
 
 #endif
 
@@ -254,6 +267,10 @@
 // function prototypes
 //---------------------------------------------------------------------------
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // currently no Timer functions are needed by EPL stack
 // so they are not implemented yet
 //void  PUBLIC EplTgtTimerInit(void);
@@ -280,6 +297,10 @@ tEplTgtTimeStamp* PUBLIC EplTgtTimeStampAlloc (void);
 
 tEplKernel PUBLIC EplTgtInit(void);
 tEplKernel PUBLIC EplTgtCleanup(void);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // #ifndef _EPLTARGET_H_
 
