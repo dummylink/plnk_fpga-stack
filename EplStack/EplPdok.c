@@ -73,9 +73,6 @@
 #include "EplObd.h"
 #include "kernel/EplDllk.h"
 #include "Benchmark.h"
-#ifdef EPL_MODULE_API_PDI
-    #include "pcp.h"
-#endif
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_PDOK)) != 0)
 
@@ -150,8 +147,10 @@ typedef struct
     tEplPdoAllocationParam  m_Allocation;
     tEplPdoChannel*         m_pRxPdoChannel;
     tEplPdoMappObject(*     m_paRxObject)[EPL_D_PDO_RPDOChannelObjects_U8];     // pointer to array
+    tEplPdoCbCopyPdo        m_pfnCbRpdoPostCopy;
     tEplPdoChannel*         m_pTxPdoChannel;
     tEplPdoMappObject(*     m_paTxObject)[EPL_D_PDO_TPDOChannelObjects_U8];     // pointer to array
+    tEplPdoCbCopyPdo        m_pfnCbTpdoPreCopy;
 
 } tEplPdokInstance;
 
@@ -189,7 +188,12 @@ static tEplKernel EplPdokCopyVarFromPdo(BYTE* pbPayload_p, tEplPdoMappObject* pM
 //
 // Description: add and initialize new instance of EPL stack
 //
-// Parameters:  none
+// Parameters:  pfnPdokCbPreCopyTPdo_p = pointer to callback function,
+//                                       which will be called right before the
+//                                       TPDO data will be copied
+//             pfnPdokCbPostCopyRPdo_p = pointer to callback function,
+//                                       which will be called right after the
+//                                       RPDO data was copied
 //
 // Returns:     tEplKernel              = error code
 //
@@ -198,13 +202,30 @@ static tEplKernel EplPdokCopyVarFromPdo(BYTE* pbPayload_p, tEplPdoMappObject* pM
 //
 //---------------------------------------------------------------------------
 
-tEplKernel EplPdokAddInstance(void)
+tEplKernel EplPdokAddInstance(tEplPdoCbCopyPdo pfnPdokCbPreCopyTPdo_p,
+                              tEplPdoCbCopyPdo pfnPdokCbPostCopyRPdo_p)
 {
 tEplKernel      Ret = kEplSuccessful;
 
     EPL_MEMSET(&EplPdokInstance_g, 0, sizeof(EplPdokInstance_g));
 
     Ret = EplDllkRegTpdoHandler(EplPdokCbProcessTpdo);
+    if (Ret != kEplSuccessful)
+    {
+        return Ret;
+    }
+
+    // set TPDO callback function
+    if (pfnPdokCbPreCopyTPdo_p != NULL)
+    {
+        EplPdokInstance_g.m_pfnCbTpdoPreCopy = pfnPdokCbPreCopyTPdo_p;
+    }
+
+    // set RPDO callback function
+    if (pfnPdokCbPostCopyRPdo_p != NULL)
+    {
+        EplPdokInstance_g.m_pfnCbRpdoPostCopy = pfnPdokCbPostCopyRPdo_p;
+    }
 
     return Ret;
 }
@@ -252,6 +273,16 @@ tEplKernel EplPdokDelInstance(void)
     {
         EPL_FREE(EplPdokInstance_g.m_paTxObject);
         EplPdokInstance_g.m_paTxObject = NULL;
+    }
+
+    if (EplPdokInstance_g.m_pfnCbTpdoPreCopy != NULL)
+    {
+        EplPdokInstance_g.m_pfnCbTpdoPreCopy = NULL;
+    }
+
+    if (EplPdokInstance_g.m_pfnCbRpdoPostCopy != NULL)
+    {
+        EplPdokInstance_g.m_pfnCbRpdoPostCopy = NULL;
     }
 
     return kEplSuccessful;
@@ -586,10 +617,11 @@ unsigned int        uiMappObjectCount;
 
         }
 
-#ifdef EPL_MODULE_API_PDI
-        // acknowledge (update) the RPDO PDI buffer right after write access
-        Gi_signalPdiPdoWriteAccess((BYTE) uiChannelId);
-#endif
+        // call data copy callback function right after RPDO access
+        if ((EplPdokInstance_g.m_pfnCbRpdoPostCopy != NULL) && (pPdoChannel->m_uiMappObjectCount != 0))
+        {
+            EplPdokInstance_g.m_pfnCbRpdoPostCopy((BYTE) uiChannelId);
+        }
 
         // processing finished successfully
         break;
@@ -703,10 +735,12 @@ unsigned int        uiMappObjectCount;
         // set PDO version in frame
         AmiSetByteToLe(&pFrame_p->m_Data.m_Pres.m_le_bPdoVersion, pPdoChannel->m_bMappingVersion);
 
-#ifdef EPL_MODULE_API_PDI
-        // acknowledge (update) the TPDO PDI buffer right before read access
-        Gi_preparePdiPdoReadAccess((BYTE) uiChannelId);
-#endif
+        // call data copy callback function right before TPDO access
+        if ((EplPdokInstance_g.m_pfnCbTpdoPreCopy != NULL) && (pPdoChannel->m_uiMappObjectCount != 0))
+        {
+            EplPdokInstance_g.m_pfnCbTpdoPreCopy((BYTE) uiChannelId);
+        }
+
         // process mapping
         for (uiMappObjectCount = pPdoChannel->m_uiMappObjectCount, pMappObject = EplPdokInstance_g.m_paTxObject[uiChannelId];
              uiMappObjectCount > 0;

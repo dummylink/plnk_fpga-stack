@@ -85,14 +85,14 @@
 // typedef
 //---------------------------------------------------------------------------
 
-
 //---------------------------------------------------------------------------
 // function prototypes
 //---------------------------------------------------------------------------
 
 tEplKernel EplPdokPdoDecode(tEplFrame* pFrame_p, unsigned int uiFrameSize_p);
 
-tEplKernel EplPdokAddInstance(void);
+tEplKernel EplPdokAddInstance(tEplPdoCbCopyPdo pfnPdokCbPreCopyTPdo_p,
+                              tEplPdoCbCopyPdo pfnPdokCbPostCopyRPdo_p);
 
 tEplKernel EplPdokDelInstance(void);
 
