@@ -2623,7 +2623,7 @@ BYTE                bTemp;
         Ret = EplObdWriteEntry (
             0x1008, 0,
             (void GENERIC*) EplApiInstance_g.m_InitParam.m_pszDevName,
-            (tEplObdSize) strlen(EplApiInstance_g.m_InitParam.m_pszDevName));
+            (tEplObdSize) strlen((char *)EplApiInstance_g.m_InitParam.m_pszDevName));
     }
 
     if (EplApiInstance_g.m_InitParam.m_pszHwVersion != NULL)
@@ -2632,7 +2632,7 @@ BYTE                bTemp;
         Ret = EplObdWriteEntry (
             0x1009, 0,
             (void GENERIC*) EplApiInstance_g.m_InitParam.m_pszHwVersion,
-            (tEplObdSize) strlen(EplApiInstance_g.m_InitParam.m_pszHwVersion));
+            (tEplObdSize) strlen((char *)EplApiInstance_g.m_InitParam.m_pszHwVersion));
     }
 
     if (EplApiInstance_g.m_InitParam.m_pszSwVersion != NULL)
@@ -2641,7 +2641,7 @@ BYTE                bTemp;
         Ret = EplObdWriteEntry (
             0x100A, 0,
             (void GENERIC*) EplApiInstance_g.m_InitParam.m_pszSwVersion,
-            (tEplObdSize) strlen(EplApiInstance_g.m_InitParam.m_pszSwVersion));
+            (tEplObdSize) strlen((char *)EplApiInstance_g.m_InitParam.m_pszSwVersion));
     }
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)

@@ -228,9 +228,9 @@ typedef struct
     BYTE                m_sHostname[32];
     BYTE                m_abVendorSpecificExt2[48];
 
-    char*               m_pszDevName;       // NMT_ManufactDevName_VS (0x1008/0 local OD)
-    char*               m_pszHwVersion;     // NMT_ManufactHwVers_VS  (0x1009/0 local OD)
-    char*               m_pszSwVersion;     // NMT_ManufactSwVers_VS  (0x100A/0 local OD)
+    BYTE*               m_pszDevName;       // NMT_ManufactDevName_VS (0x1008/0 local OD)
+    BYTE*               m_pszHwVersion;     // NMT_ManufactHwVers_VS  (0x1009/0 local OD)
+    BYTE*               m_pszSwVersion;     // NMT_ManufactSwVers_VS  (0x100A/0 local OD)
 
     tEplApiCbEvent      m_pfnCbEvent;
     void*               m_pEventUserArg;
