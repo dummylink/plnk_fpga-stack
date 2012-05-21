@@ -78,6 +78,9 @@
 #include "user/EplPdou.h"
 #include "EplSdoAc.h"
 #include "EplPdo.h"
+#ifdef EPL_MODULE_API_PDI
+#include "pcp.h"
+#endif
 #if defined (__NIOS2__)
     #include "system.h"
 #endif // defined (__NIOS2__)
@@ -183,6 +186,13 @@ static tEplKernel EplPdouConfigureAllPdos(void);
 
 static tEplKernel EplPdouCheckAndConfigurePdo(unsigned int uiIndex_p, BYTE  bMappObjectCount_p, tEplObdAccess AccessType_p, DWORD* pdwAbortCode_p);
 
+#ifdef EPL_MODULE_API_PDI
+static tEplKernel EplPdouCheckandConfigurePdoPdi(unsigned int uiMappParamIndex_p,
+                                                        BYTE bMappObjectCount_p,
+                                                        tEplObdAccess AccessType_p,
+                                                        tEplObdCbParam* pParam_p);
+#endif // EPL_MODULE_API_PDI
+
 static tEplKernel EplPdouCheckPdoValidity(unsigned int uiMappParamIndex_p, DWORD* pdwAbortCode_p);
 
 static void EplPdouDecodeObjectMapping(QWORD qwObjectMapping_p,
@@ -285,27 +295,45 @@ tEplKernel      Ret = kEplSuccessful;
         case kEplNmtGsResetCommunication:
         {
             EplPdouInstance_g.m_fAllocated = FALSE;
-            EplPdouInstance_g.m_fRunning = FALSE;
-            break;
-        }
-#ifndef EPL_MODULE_API_PDI
-        case kEplNmtGsResetConfiguration:
-        {
-            EplPdouInstance_g.m_fAllocated = FALSE;
+            // indicate reset state
             EplPdouInstance_g.m_fRunning = FALSE;
 
-            // forward PDO configuration to Pdok module
+#ifdef POWERLINK_0_PDI_PCP_CONFIG
+            // Forward PDO configuration to Pdok module
+            // (includes reallocation of PDO channels)
+            // The link to PDI has to be done AFTER
+            // the PDO channel allocation !
             Ret = EplPdouConfigureAllPdos();
             if (Ret != kEplSuccessful)
             {
                 goto Exit;
             }
-
-            EplPdouInstance_g.m_fRunning = TRUE;
+#endif //POWERLINK_0_PDI_PCP_CONFIG
 
             break;
         }
-#endif // not EPL_MODULE_API_PDI
+
+        case kEplNmtGsResetConfiguration:
+        {
+#ifndef POWERLINK_0_PDI_PCP_CONFIG
+            // Do not reallocate in case of PDI
+            // because it would destroy the PDI links.
+            EplPdouInstance_g.m_fAllocated = FALSE;
+            EplPdouInstance_g.m_fRunning = FALSE;
+
+            // forward PDO configuration to Pdok module
+            // (includes reallocation of PDO channels)
+            Ret = EplPdouConfigureAllPdos();
+            if (Ret != kEplSuccessful)
+            {
+                goto Exit;
+            }
+#endif // ndef POWERLINK_0_PDI_PCP_CONFIG
+
+            // indicate reset states finished
+            EplPdouInstance_g.m_fRunning = TRUE;
+            break;
+        }
 
         default:
         {   // do nothing
@@ -334,7 +362,7 @@ Exit:
 // State:
 //
 //---------------------------------------------------------------------------
-
+#ifndef EPL_MODULE_API_PDI
 tEplKernel PUBLIC EplPdouCbObdAccess(tEplObdCbParam MEM* pParam_p)
 {
 tEplKernel          Ret = kEplSuccessful;
@@ -428,12 +456,144 @@ unsigned int        uiCurPdoSize;
                                &MappObject,
                                &pParam_p->m_dwAbortCode,
                                &uiCurPdoSize);
-
     }
 
 Exit:
     return Ret;
 }
+
+#else // EPL_MODULE_API_PDI is defined
+
+tEplKernel PUBLIC EplPdouCbObdAccess(tEplObdCbParam MEM* pParam_p)
+{
+tEplKernel          Ret = kEplSuccessful;
+unsigned int        uiIndexType;
+BYTE                bMappObjectCount = 0;
+tEplObdAccess       AccessType;
+unsigned int        uiCurPdoSize;
+
+    pParam_p->m_dwAbortCode = 0;
+
+    // fetch object index type
+    uiIndexType = pParam_p->m_uiIndex & EPL_PDOU_OBD_IDX_MASK;
+
+    // check index type
+    switch (uiIndexType)
+    {
+        case EPL_PDOU_OBD_IDX_RX_COMM_PARAM:
+            // RPDO communication parameter accessed
+        case EPL_PDOU_OBD_IDX_TX_COMM_PARAM:
+        {   // TPDO communication parameter accessed
+
+            if (pParam_p->m_ObdEvent != kEplObdEvPreWrite)
+            {   // do not handle read accesses, post write events etc.
+                goto Exit;
+            }
+
+            Ret = EplPdouCheckPdoValidity(
+                    (EPL_PDOU_OBD_IDX_MAPP_PARAM | pParam_p->m_uiIndex),
+                    &pParam_p->m_dwAbortCode);
+            if (Ret != kEplSuccessful)
+            {   // PDO is valid or does not exist
+                goto Exit;
+            }
+
+            goto Exit;
+        }
+
+        case EPL_PDOU_OBD_IDX_RX_MAPP_PARAM:
+        {   // RPDO mapping parameter accessed
+
+            AccessType = kEplObdAccWrite;
+            break;
+        }
+
+        case EPL_PDOU_OBD_IDX_TX_MAPP_PARAM:
+        {   // TPDO mapping parameter accessed
+
+            AccessType = kEplObdAccRead;
+            break;
+        }
+
+        default:
+        {   // this callback function is only for
+            // PDO mapping and communication parameters
+            pParam_p->m_dwAbortCode = EPL_SDOAC_GENERAL_ERROR;
+            Ret = kEplPdoInvalidObjIndex;
+            goto Exit;
+        }
+    }
+
+    // RPDO and TPDO mapping parameter accessed
+
+    if (pParam_p->m_uiSubIndex == 0)
+    {   // object mapping count accessed
+
+        if (pParam_p->m_ObdEvent == kEplObdEvPreWrite)
+        {
+            // verify if caller has assigned a callback function
+            if (pParam_p->m_pfnAccessFinished == NULL)
+            {
+                pParam_p->m_dwAbortCode = EPL_SDOAC_DATA_NOT_TRANSF_OR_STORED;
+                Ret = kEplObdAccessViolation;
+                goto Exit;
+            }
+
+            // PDO is enabled or disabled
+            bMappObjectCount = *((BYTE*) pParam_p->m_pArg);
+
+            // --- forward mapping information to AP ---
+            // activate or deactivate mapping of this channel
+            Ret = EplPdouCheckandConfigurePdoPdi(pParam_p->m_uiIndex, bMappObjectCount, AccessType, pParam_p);
+            if (Ret != kEplSuccessful)
+            {
+                goto Exit;
+            }
+
+            // do not return kEplObdAccessAdopted here because
+            // the actual OBD write operation shall still be executed
+        }
+        else if (pParam_p->m_ObdEvent == kEplObdEvPostWrite)
+        {   // OBD write operation was executed, so we can answer the SDO write access later
+            // For now, send SDO sequence layer ACK immediately
+            return kEplObdAccessAdopted;
+        }
+    }
+    else
+    {   // ObjectMapping
+    tEplPdoMappObject   MappObject;
+    QWORD               qwObjectMapping;
+
+        if (pParam_p->m_ObdEvent != kEplObdEvPreWrite)
+        {   // do not handle read accesses, post write events etc.
+            goto Exit;
+        }
+
+        Ret = EplPdouCheckPdoValidity(pParam_p->m_uiIndex, &pParam_p->m_dwAbortCode);
+        if (Ret != kEplSuccessful)
+        {   // PDO is valid or does not exist
+            goto Exit;
+        }
+
+        // check existence of object and validity of object length
+
+        qwObjectMapping = *((QWORD*) pParam_p->m_pArg);
+
+        Ret = EplPdouCheckObjectMapping(qwObjectMapping,
+                               AccessType,
+                               &MappObject,
+                               &pParam_p->m_dwAbortCode,
+                               &uiCurPdoSize);
+        if (Ret != kEplSuccessful)
+        {   // PDO is invalid or does not exist
+            goto Exit;
+        }
+    }
+
+Exit:
+    return Ret;
+}
+#endif // EPL_MODULE_API_PDI
 
 
 //---------------------------------------------------------------------------
@@ -886,6 +1046,107 @@ tEplPdoMappObject*  pMappObject;
 Exit:
     return Ret;
 }
+
+
+//---------------------------------------------------------------------------
+//
+// Function:    EplPdouCheckandConfigurePdoPdi()
+//
+// Description: This function configures the Process Data Interface (PDI)
+//              of the specified PDO channel.
+//              A subfunction links mapped PDO data to the PDI, thus
+
+//
+// Parameters:  uiMappParamIndex_p  = PDO channel mapping index
+//              bMappObjectCount_p  = number of objects
+//                                      0: deactivate channel
+//                                    > 0: activate channel
+//              AccessType_p        = access type to mapped object:
+//                                    write = RPDO and read = TPDO
+//              pParam_p            = OBD parameter
+//
+// Returns:     tEplKernel          = error code
+//
+//
+// State:
+//
+//---------------------------------------------------------------------------
+#ifdef EPL_MODULE_API_PDI
+static tEplKernel EplPdouCheckandConfigurePdoPdi(unsigned int uiMappParamIndex_p,
+                                                 BYTE bMappObjectCount_p,
+                                                 tEplObdAccess AccessType_p,
+                                                 tEplObdCbParam* pParam_p)
+{
+unsigned int    uiCommParamIndex;
+tLinkPdosReqComCon  LinkPdosReqComCon;
+tPdiAsyncStatus PdiRet = kPdiAsyncStatusSuccessful;
+tEplKernel      Ret = kEplSuccessful;
+
+    // --- configure this channel ---
+
+    // convert mapping index to related communication index
+    uiCommParamIndex = ~EPL_PDOU_OBD_IDX_MAPP_PARAM & uiMappParamIndex_p;
+
+    LinkPdosReqComCon.m_wMapIndex = uiMappParamIndex_p;
+    LinkPdosReqComCon.m_bMapObjCnt = bMappObjectCount_p;
+    if (AccessType_p == kEplObdAccWrite)
+    {
+        LinkPdosReqComCon.m_bPdoDir = RPdo;
+    }
+    else
+    {
+        LinkPdosReqComCon.m_bPdoDir = TPdo;
+    }
+
+    // save OBD access handle for AP response callback function
+    Ret = EplObduSave0bdAccHdl(&ApiPdiComInstance_g.apObdParam_m[0], pParam_p);
+    if (Ret != kEplSuccessful)
+    {
+        goto Exit;
+    }
+
+    DEBUG_TRACE1(DEBUG_LVL_14, "pApiPdiComInstance_g: %p\n", ApiPdiComInstance_g.apObdParam_m[0]);
+
+    /* prepare PDO mapping */
+    /* setup PDO <-> DPRAM copy table */
+    // Gi_ObdAccessSrcPdiFinished callback is assinged for transfer error case
+    PdiRet = CnApiAsync_postMsg(kPdiAsyncMsgIntLinkPdosReq,
+                                (BYTE *) &LinkPdosReqComCon,
+                                Gi_ObdAccessSrcPdiFinished,
+                                0);
+    if (PdiRet != kPdiAsyncStatusSuccessful)
+    {
+        DEBUG_TRACE1(DEBUG_LVL_CNAPI_ERR, "ERROR: Posting kPdiAsyncMsgIntLinkPdosReq failed with: %d\n", PdiRet);
+        pParam_p->m_dwAbortCode = EPL_SDOAC_GENERAL_ERROR;
+        Ret = kEplReject;
+        goto Exit;
+    }
+
+    /* setup frame <-> PDO copy table - needs already linked objects! */
+    // PDO is enabled or disabled depending on bMappObjectCount_p
+    Ret = EplPdouCheckAndConfigurePdo(uiMappParamIndex_p, bMappObjectCount_p, AccessType_p, &pParam_p->m_dwAbortCode);
+    if (Ret != kEplSuccessful)
+    {
+        // signal error
+        if (pParam_p->m_dwAbortCode == 0)
+        {
+            ApiPdiComInstance_g.apObdParam_m[0]->m_dwAbortCode = EPL_SDOAC_GENERAL_ERROR;
+        }
+        else
+        {
+            ApiPdiComInstance_g.apObdParam_m[0]->m_dwAbortCode = pParam_p->m_dwAbortCode;
+        }
+
+        // error will be processed and handle will be deleted within the callback Gi_ObdAccessSrcPdiFinished
+        // -> return successful now
+        Ret = kEplSuccessful;
+        goto Exit;
+    }
+
+Exit:
+    return Ret;
+}
+#endif // EPL_MODULE_API_PDI
 
 
 //---------------------------------------------------------------------------
