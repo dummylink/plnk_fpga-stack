@@ -215,7 +215,7 @@ tEplFrameInfo   FrameInfo;
     FrameInfo.m_uiFrameSize = pSkb_p->len;
 
     //call send fkt on DLL
-    Ret = EplDllkCalAsyncSend(&FrameInfo, kEplDllAsyncReqPrioGeneric);
+    Ret = EplDllkCalAsyncSend(&FrameInfo, kEplDllAsyncReqPrioGeneric, kEplDllAsyncBuffVeth);
     if (Ret != kEplSuccessful)
     {
         EPL_DBGLVL_VETH_TRACE1("VEthXmit: EplDllkCalAsyncSend returned 0x%02X\n", Ret);
