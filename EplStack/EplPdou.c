@@ -80,6 +80,8 @@
 #include "EplPdo.h"
 #ifdef EPL_MODULE_API_PDI
 #include "pcp.h"
+#include "cnApiTypPdo.h"
+#include "pcpAsyncSm.h"
 #endif
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_PDOU)) != 0)
