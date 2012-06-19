@@ -160,21 +160,25 @@
     #ifndef PRINTF0
         #ifndef NDEBUG
             #define PRINTF printf
+            #define PRINTF0(arg)                PRINTF(arg)
+            #define PRINTF1(arg,p1)             PRINTF(arg,p1)
+            #define PRINTF2(arg,p1,p2)          PRINTF(arg,p1,p2)
+            #define PRINTF3(arg,p1,p2,p3)       PRINTF(arg,p1,p2,p3)
+            #define PRINTF4(arg,p1,p2,p3,p4)    PRINTF(arg,p1,p2,p3,p4)
+            //#define PRINTF                      TRACE
+            //#define PRINTF0(arg)                TRACE0(arg)
+            //#define PRINTF1(arg,p1)             TRACE1(arg,p1)
+            //#define PRINTF2(arg,p1,p2)          TRACE2(arg,p1,p2)
+            //#define PRINTF3(arg,p1,p2,p3)       TRACE3(arg,p1,p2,p3)
+            //#define PRINTF4(arg,p1,p2,p3,p4)    TRACE4(arg,p1,p2,p3,p4)
         #else // !NDEBUG
             #define PRINTF
+            #define PRINTF0(arg)
+            #define PRINTF1(arg,p1)
+            #define PRINTF2(arg,p1,p2)
+            #define PRINTF3(arg,p1,p2,p3)
+            #define PRINTF4(arg,p1,p2,p3,p4)
         #endif // !NDEBUG
-
-        #define PRINTF0(arg)                PRINTF(arg)
-        #define PRINTF1(arg,p1)             PRINTF(arg,p1)
-        #define PRINTF2(arg,p1,p2)          PRINTF(arg,p1,p2)
-        #define PRINTF3(arg,p1,p2,p3)       PRINTF(arg,p1,p2,p3)
-        #define PRINTF4(arg,p1,p2,p3,p4)    PRINTF(arg,p1,p2,p3,p4)
-        //#define PRINTF                      TRACE
-        //#define PRINTF0(arg)                TRACE0(arg)
-        //#define PRINTF1(arg,p1)             TRACE1(arg,p1)
-        //#define PRINTF2(arg,p1,p2)          TRACE2(arg,p1,p2)
-        //#define PRINTF3(arg,p1,p2,p3)       TRACE3(arg,p1,p2,p3)
-        //#define PRINTF4(arg,p1,p2,p3,p4)    TRACE4(arg,p1,p2,p3,p4)
     #endif
 
     #if EPL_USE_SHAREDBUFF != FALSE

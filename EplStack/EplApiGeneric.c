@@ -1938,7 +1938,7 @@ tEplApiEventType    EventType;
 Exit:
     if (Ret != kEplSuccessful)
     {
-        PRINTF("ERROR: %s failed!\n", __func__);
+        PRINTF1("ERROR: %s failed!\n", __func__);
     }
     return Ret;
 }
