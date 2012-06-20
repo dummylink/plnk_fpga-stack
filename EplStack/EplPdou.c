@@ -865,6 +865,7 @@ QWORD               qwObjectMapping;
 BYTE                bMappSubindex;
 unsigned int        uiCurPdoSize;
 WORD                wMaxPdoSize;
+WORD                wIsochrRxMaxPayload;
 WORD                wCalcPdoSize = 0;
 unsigned int        uiPayloadLimitIndex;
 unsigned int        uiPayloadLimitSubIndex;
@@ -941,6 +942,33 @@ tEplPdoMappObject*  pMappObject;
         {
             uiPayloadLimitIndex = 0x1F8D;   // NMT_PResPayloadLimitList_AU16
             uiPayloadLimitSubIndex = bNodeId;
+
+            // fetch maximum PDO size from OD
+            ObdSize = sizeof (wMaxPdoSize);
+            Ret = EplObduReadEntry(uiPayloadLimitIndex, uiPayloadLimitSubIndex, &wMaxPdoSize, &ObdSize);
+            if (Ret != kEplSuccessful)
+            {   // other fatal error occured
+                *pdwAbortCode_p = EPL_SDOAC_GENERAL_ERROR;
+                goto Exit;
+            }
+
+            // fetch IsochrRxMaxPayload_U16 from OD
+            ObdSize = sizeof (wIsochrRxMaxPayload);
+            Ret = EplObduReadEntry(0x1F98, 0x02, &wIsochrRxMaxPayload, &ObdSize);
+            if (Ret != kEplSuccessful)
+            {   // other fatal error occured
+              *pdwAbortCode_p = EPL_SDOAC_GENERAL_ERROR;
+              goto Exit;
+            }
+
+            // IsochrRxMaxPayload_U16 is also a limit for NMT_PResPayloadLimitList_AU16
+            // if data of the corresponding node (equals subindex) is mapped
+            if (wMaxPdoSize > wIsochrRxMaxPayload)
+            {
+              *pdwAbortCode_p = EPL_SDOAC_PDO_LENGTH_EXCEEDED;
+              Ret = kEplPdoLengthExceeded;
+              goto Exit;
+            }
         }
     }
     else
