@@ -229,6 +229,7 @@ typedef enum
     kEplEventSourceEventk       = 0x06, // Eventk module
     kEplEventSourceSyncCb       = 0x07, // sync-Cb
     kEplEventSourceErrk         = 0x08, // Error handler module
+    kEplEventSourceEdrv         = 0x09, // Edrv module
 
     // userspace modules
     kEplEventSourceDllu         = 0x10, // Dllu module

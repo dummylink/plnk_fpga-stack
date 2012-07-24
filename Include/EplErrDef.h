@@ -94,6 +94,7 @@ typedef enum
     kEplInvalidParam            = 0x000D,       // invalid parameter specified
 
     // area for EDRV module 0x0010 - 0x001F
+    kEplEdrvPktDmaError         = 0x0010,       // DMA packet transfer failed -> bad timing of memory connection
     kEplEdrvNoFreeTxDesc        = 0x0011,       // no free Tx descriptor available
     kEplEdrvInvalidCycleLen     = 0x0012,       // invalid cycle length (e.g. 0)
     kEplEdrvInitError           = 0x0013,       // initialisation error
