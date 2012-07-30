@@ -73,6 +73,7 @@
 #define _EPL_PDO_H_
 
 #include "EplInc.h"
+#include "EplObd.h"
 
 //---------------------------------------------------------------------------
 // const defines
@@ -180,6 +181,12 @@ typedef struct
 
 // callback function for pre- and postprocessing of PDO copy operation
 typedef void (* tEplPdoCbCopyPdo) (BYTE bChannelId);
+
+#ifdef EPL_MODULE_API_PDI
+// callback function for Process Data Interace PDO configuration
+typedef tEplKernel (* tEplPdouCbCfgPdi) (unsigned int uiMappParamIndex_p, BYTE bMappObjectCount_p, tEplObdAccess AccessType_p, tEplObdCbParam* pParam_p);
+#endif
+
 
 //---------------------------------------------------------------------------
 // function prototypes

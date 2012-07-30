@@ -84,12 +84,15 @@
 // typedef
 //---------------------------------------------------------------------------
 
-
 //---------------------------------------------------------------------------
 // function prototypes
 //---------------------------------------------------------------------------
 
+#ifndef EPL_MODULE_API_PDI
 tEplKernel EplPdouAddInstance(void);
+#else
+tEplKernel EplPdouAddInstance(tEplPdouCbCfgPdi pfnPdouCbCfgPdi_p);
+#endif
 
 tEplKernel EplPdouDelInstance(void);
 

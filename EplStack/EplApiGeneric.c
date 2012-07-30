@@ -424,7 +424,11 @@ tEplDllkInitParam   DllkInitParam;
         goto Exit;
     }
 
+#ifndef EPL_MODULE_API_PDI
     Ret = EplPdouAddInstance();
+#else
+    Ret = EplPdouAddInstance(EplApiInstance_g.m_InitParam.m_pfnPdouCbConfigPdi);
+#endif
     if (Ret != kEplSuccessful)
     {
         goto Exit;

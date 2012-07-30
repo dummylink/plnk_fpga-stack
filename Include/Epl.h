@@ -251,6 +251,10 @@ typedef struct
 
     tEplObdCallback     m_pfnDefaultObdCallback;    // default OD callback function
     tEplRebootCb        m_pfnRebootCb;              // callback function to reboot device
+#ifdef EPL_MODULE_API_PDI
+    tEplPdouCbCfgPdi    m_pfnPdouCbConfigPdi;   // callback function for PDI PDO configuration
+    tEplObdParam *      m_pObdParamConHdlPdi;   // connection handle for OBD access forwarding to PDI
+#endif
 
 } tEplApiInitParam;
 
