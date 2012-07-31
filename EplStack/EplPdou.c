@@ -309,6 +309,7 @@ tEplKernel      Ret = kEplSuccessful;
 
         default:
         {   // do nothing
+            goto Exit;
             break;
         }
 

@@ -2562,7 +2562,6 @@ tEplNmtState    NmtState;
 static tEplKernel EplDllkProcessCycleFinish(tEplNmtState NmtState_p)
 {
 tEplKernel      Ret = kEplReject;
-tEdrvTxBuffer*  pTxBuffer;
 
     // update the flags (NMT State, RS, ...) of all frames
     Ret = EplDllkUpdateNmtResponseServiceFrames(NmtState_p);
