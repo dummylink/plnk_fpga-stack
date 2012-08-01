@@ -100,6 +100,38 @@
 #define EPL_PDOK_OBD_IDX_TX_COMM_PARAM  0x1800
 #define EPL_PDOK_OBD_IDX_TX_MAPP_PARAM  0x1A00
 
+#if EPL_PDOK_ENDIAN_CONVERSION == FALSE
+static const WORD aSizeList[] = { 0,                    // not used            0x00
+                                  1,                    // kEplObdTypBool      0x01
+                                  1,                    // kEplObdTypInt8      0x02
+                                  2,                    // kEplObdTypInt16     0x03
+                                  4,                    // kEplObdTypInt32     0x04
+                                  1,                    // kEplObdTypUInt8     0x05
+                                  2,                    // kEplObdTypUInt16    0x06
+                                  4,                    // kEplObdTypUInt32    0x07
+                                  4,                    // kEplObdTypReal32    0x08
+                                  0,                    // kEplObdTypVString   0x09
+                                  0,                    // kEplObdTypOString   0x0A
+                                  0,                    // not used            0x0B
+                                  sizeof(tTimeOfDay),   // kEplObdTypTimeOfDay 0x0C
+                                  sizeof(tTimeOfDay),   // kEplObdTypTimeDiff  0x0D
+                                  0,                    // not used            0x0E
+                                  0,                    // kEplObdTypDomain    0x0F
+                                  3,                    // kEplObdTypInt24     0x10
+                                  8,                    // kEplObdTypReal64    0x11
+                                  5,                    // kEplObdTypInt40     0x12
+                                  6,                    // kEplObdTypInt48     0x13
+                                  7,                    // kEplObdTypInt56     0x14
+                                  8,                    // kEplObdTypInt64     0x15
+                                  3,                    // kEplObdTypUInt24    0x16
+                                  0,                    // not used            0x17
+                                  5,                    // kEplObdTypUInt40    0x18
+                                  6,                    // kEplObdTypUInt48    0x19
+                                  7,                    // kEplObdTypUInt56    0x1A
+                                  8,                    // kEplObdTypUInt64    0x1B
+            };
+#endif //EPL_PDOK_ENDIAN_CONVERSION == FALSE
+
 //---------------------------------------------------------------------------
 // local types
 //---------------------------------------------------------------------------
@@ -800,7 +832,7 @@ Exit:
 // State:
 //
 //---------------------------------------------------------------------------
-
+#if EPL_PDOK_ENDIAN_CONVERSION != FALSE
 static tEplKernel EplPdokCopyVarToPdo(BYTE* pbPayload_p, tEplPdoMappObject* pMappObject_p)
 {
 tEplKernel      Ret = kEplSuccessful;
@@ -908,6 +940,39 @@ void*           pVar;
     return Ret;
 }
 
+#else //EPL_PDOK_ENDIAN_CONVERSION != FALSE
+static tEplKernel EplPdokCopyVarToPdo(BYTE* pbPayload_p, tEplPdoMappObject* pMappObject_p)
+{
+tEplKernel      Ret = kEplSuccessful;
+unsigned int    uiByteOffset;
+void*           pVar;
+WORD            i = 0;
+WORD            wSize;
+
+    uiByteOffset = EPL_PDO_MAPPOBJECT_GET_BITOFFSET(pMappObject_p) >> 3;
+    pbPayload_p += uiByteOffset;
+    pVar = EPL_PDO_MAPPOBJECT_GET_VAR(pMappObject_p);
+
+    if(aSizeList[EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p)] > EPL_PDO_COMMUNICATION_PROFILE_START)
+    {
+        wSize = EPL_PDO_MAPPOBJECT_GET_BYTESIZE(pMappObject_p);
+    }
+    else
+    {
+        wSize = aSizeList[EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p)];
+    }
+
+    do
+    {
+        *((BYTE*)pbPayload_p++) = *((BYTE*)pVar++); // copy bytewise
+        i++;
+    }
+    while ( i < wSize);
+
+    return Ret;
+}
+#endif //EPL_PDOK_ENDIAN_CONVERSION != FALSE
+
 
 //---------------------------------------------------------------------------
 //
@@ -925,7 +990,7 @@ void*           pVar;
 // State:
 //
 //---------------------------------------------------------------------------
-
+#if EPL_PDOK_ENDIAN_CONVERSION != FALSE
 static tEplKernel EplPdokCopyVarFromPdo(BYTE* pbPayload_p, tEplPdoMappObject* pMappObject_p)
 {
 tEplKernel      Ret = kEplSuccessful;
@@ -1032,7 +1097,38 @@ void*           pVar;
 
     return Ret;
 }
+#else //EPL_PDOK_ENDIAN_CONVERSION != FALSE
+static tEplKernel EplPdokCopyVarFromPdo(BYTE* pbPayload_p, tEplPdoMappObject* pMappObject_p)
+{
+tEplKernel      Ret = kEplSuccessful;
+unsigned int    uiByteOffset;
+void*           pVar;
+WORD            i = 0;
+WORD            wSize;
 
+    uiByteOffset = EPL_PDO_MAPPOBJECT_GET_BITOFFSET(pMappObject_p) >> 3;
+    pbPayload_p += uiByteOffset;
+    pVar = EPL_PDO_MAPPOBJECT_GET_VAR(pMappObject_p);
+
+    if(aSizeList[EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p)] > EPL_PDO_COMMUNICATION_PROFILE_START)
+    {
+        wSize = EPL_PDO_MAPPOBJECT_GET_BYTESIZE(pMappObject_p);
+    }
+    else
+    {
+        wSize = aSizeList[EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p)];
+    }
+
+    do
+    {
+        *((BYTE*)pVar++) = *((BYTE*)pbPayload_p++); // copy bytewise
+        i++;
+    }
+    while ( i < wSize);
+
+    return Ret;
+}
+#endif //EPL_PDOK_ENDIAN_CONVERSION != FALSE
 
 #endif // #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_PDOK)) != 0)
 

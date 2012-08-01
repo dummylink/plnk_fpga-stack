@@ -204,6 +204,10 @@
 #define EPL_DLL_SOC_SYNC_SHIFT_US       150 // negative time shift of isochronous task in relation to SoC
 #endif
 
+#ifndef EPL_PDOK_ENDIAN_CONVERSION
+#define EPL_PDOK_ENDIAN_CONVERSION      TRUE    // convert endianess of PDO messages
+#endif
+
 #ifndef EPL_DLL_PRES_FILTER_COUNT
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)
 #define EPL_DLL_PRES_FILTER_COUNT   -1   // maximum count of Rx filter entries for PRes frames
