@@ -72,6 +72,8 @@
 #ifndef _EPL_DLLCAL_H_
 #define _EPL_DLLCAL_H_
 
+#include "EplCfg.h"
+
 
 //---------------------------------------------------------------------------
 // const defines
