@@ -4656,29 +4656,22 @@ tEdrvTxBuffer*  pTxBuffer = NULL;
     // Save timestamps of SoC frame
     pFrame = (tEplFrame *) pRxBuffer_p->m_pbBuffer;
 
-    if (NmtState_p == kEplNmtCsOperational)
+    if (EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid == FALSE)
     {
-        EplDllkInstance_g.m_SocTimeStamp.m_netTime.m_dwSec =
-                AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwSec));
-        EplDllkInstance_g.m_SocTimeStamp.m_netTime.m_dwNanoSec =
-                AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwNanoSec));
-
-        if (EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid == FALSE)
+        // from the first change in the SoC time stamp it is considered valid
+        if (EplDllkInstance_g.m_SocTimeStamp.m_qwRelTime != AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime)))
         {
-            // from the first change in the SoC time stamp it is considered valid
-            if (EplDllkInstance_g.m_SocTimeStamp.m_qwRelTime != AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime)))
-            {
-                EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid = TRUE;
-            }
+            EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid = TRUE;
         }
-        // save Soc Relative Time
-        EplDllkInstance_g.m_SocTimeStamp.m_qwRelTime = AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime));
     }
-    else
-    {
-        // SoC time stamp only valid in Operational
-        EplDllkInstance_g.m_SocTimeStamp.m_fSocRelTimeValid = FALSE;
-    }
+
+    // save Soc Relative Time
+    EplDllkInstance_g.m_SocTimeStamp.m_qwRelTime = AmiGetQword64FromLe(&(pFrame->m_Data.m_Soc.m_le_RelativeTime));
+
+    EplDllkInstance_g.m_SocTimeStamp.m_netTime.m_dwSec =
+            AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwSec));
+    EplDllkInstance_g.m_SocTimeStamp.m_netTime.m_dwNanoSec =
+            AmiGetDwordFromLe(&(pFrame->m_Data.m_Soc.m_le_NetTime.m_dwNanoSec));
 #endif
 
     // reprogram timer
