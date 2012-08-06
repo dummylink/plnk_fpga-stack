@@ -81,9 +81,6 @@
 #ifdef EPL_MODULE_API_PDI
 #include "pcp.h"
 #endif
-#if defined (__NIOS2__)
-    #include "system.h"
-#endif // defined (__NIOS2__)
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_PDOU)) != 0)
 
