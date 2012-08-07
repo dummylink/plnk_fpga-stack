@@ -962,14 +962,84 @@
     #elif defined (__NIOS2__)
         #define TARGET_SYSTEM       _NO_OS_
         #define DEV_SYSTEM          _DEV_NIOS2_
-
+        #define ALT_INTERNAL_RAM    __attribute__((section(".tc_i_mem_pcp")))
+        #ifdef NDEBUG
+            #if (ALT_TCIMEM_SIZE >= 2048)
+                #define INT_RAM_PDOK_01_PROCESS_TPDO_CB ALT_INTERNAL_RAM
+                #define INT_RAM_PDOK_02_ENCODE_TPDO_CB  ALT_INTERNAL_RAM
+                #define INT_RAM_PDOK_03_PDO_DECODE      ALT_INTERNAL_RAM
+                #define INT_RAM_EVENTK_01_PROCESS       ALT_INTERNAL_RAM
+                #define INT_RAM_EVENTK_02_POST          ALT_INTERNAL_RAM
+            #endif
+            #if (ALT_TCIMEM_SIZE >= 4096)
+                #define INT_RAM_OMETHLIB_01_RX_IRQ_HDL  ALT_INTERNAL_RAM
+                #define INT_RAM_OMETHLIB_02_TX_IRQ_HDL  ALT_INTERNAL_RAM
+                #define INT_RAM_EDRVOPENMAC_01_RX_HOOK  ALT_INTERNAL_RAM
+                #define INT_RAM_EDRVOPENMAC_02_IRQ_HDL  ALT_INTERNAL_RAM
+                #define INT_RAM_MAIN_01_APP_CB_SYNC     ALT_INTERNAL_RAM
+            #endif
+        #endif
     #elif defined (__MICROBLAZE__)
         #define TARGET_SYSTEM       _NO_OS_
         #define DEV_SYSTEM          _DEV_MICROBLAZE_
+        #define XIL_INTERNAL_RAM    __attribute__((section(".local_memory")))
+        #if (defined(XIL_NO_OPT_LEVEL) || defined(XIL_OPT_LEVEL_1) || \
+             defined(XIL_OPT_LEVEL_2)  || defined(XIL_OPT_LEVEL_3) || \
+             defined(XIL_OPT_LEVEL_SIZE)                               )
+            #define INT_RAM_PDOK_01_PROCESS_TPDO_CB XIL_INTERNAL_RAM
+            #define INT_RAM_PDOK_02_ENCODE_TPDO_CB  XIL_INTERNAL_RAM
+            #define INT_RAM_PDOK_03_PDO_DECODE      XIL_INTERNAL_RAM
+            #define INT_RAM_EVENTK_01_PROCESS       XIL_INTERNAL_RAM
+            #define INT_RAM_EVENTK_02_POST          XIL_INTERNAL_RAM
+            #define INT_RAM_OMETHLIB_01_RX_IRQ_HDL  XIL_INTERNAL_RAM
+            #define INT_RAM_OMETHLIB_02_TX_IRQ_HDL  XIL_INTERNAL_RAM
+            #define INT_RAM_EDRVOPENMAC_01_RX_HOOK  XIL_INTERNAL_RAM
+            #define INT_RAM_EDRVOPENMAC_02_IRQ_HDL  XIL_INTERNAL_RAM
+            #define INT_RAM_MAIN_01_APP_CB_SYNC     XIL_INTERNAL_RAM
+    #endif
+        #if (defined(XIL_OPT_LEVEL_3) || defined(XIL_OPT_LEVEL_SIZE))
+            #define INT_RAM_DLLK_01_FRAME_RCVD_CB   XIL_INTERNAL_RAM
+        #endif
 
     #else
         #error 'ERROR: DEV_SYSTEM not found!'
     #endif
+
+    // per default, no function placement in special memory
+    #ifndef INT_RAM_DLLK_01_FRAME_RCVD_CB
+      #define INT_RAM_DLLK_01_FRAME_RCVD_CB
+    #endif
+    #ifndef INT_RAM_PDOK_01_PROCESS_TPDO_CB
+      #define INT_RAM_PDOK_01_PROCESS_TPDO_CB
+    #endif
+    #ifndef INT_RAM_PDOK_02_ENCODE_TPDO_CB
+      #define INT_RAM_PDOK_02_ENCODE_TPDO_CB
+    #endif
+    #ifndef INT_RAM_PDOK_03_PDO_DECODE
+      #define INT_RAM_PDOK_03_PDO_DECODE
+    #endif
+    #ifndef INT_RAM_EVENTK_01_PROCESS
+      #define INT_RAM_EVENTK_01_PROCESS
+    #endif
+    #ifndef INT_RAM_EVENTK_02_POST
+      #define INT_RAM_EVENTK_02_POST
+    #endif
+    #ifndef INT_RAM_OMETHLIB_01_RX_IRQ_HDL
+      #define INT_RAM_OMETHLIB_01_RX_IRQ_HDL
+    #endif
+    #ifndef INT_RAM_OMETHLIB_02_TX_IRQ_HDL
+      #define INT_RAM_OMETHLIB_02_TX_IRQ_HDL
+    #endif
+    #ifndef INT_RAM_EDRVOPENMAC_01_RX_HOOK
+      #define INT_RAM_EDRVOPENMAC_01_RX_HOOK
+    #endif
+    #ifndef INT_RAM_EDRVOPENMAC_02_IRQ_HDL
+      #define INT_RAM_EDRVOPENMAC_02_IRQ_HDL
+    #endif
+    #ifndef INT_RAM_MAIN_01_APP_CB_SYNC
+      #define INT_RAM_MAIN_01_APP_CB_SYNC
+    #endif
+
 
     #ifndef NO_QWORD
     #ifndef QWORD

@@ -89,7 +89,8 @@
 // function prototypes
 //---------------------------------------------------------------------------
 
-tEplKernel EplPdokPdoDecode(tEplFrame* pFrame_p, unsigned int uiFrameSize_p);
+tEplKernel EplPdokPdoDecode(tEplFrame* pFrame_p,
+                            unsigned int uiFrameSize_p) INT_RAM_PDOK_03_PDO_DECODE;
 
 tEplKernel EplPdokAddInstance(tEplPdoCbCopyPdo pfnPdokCbPreCopyTPdo_p,
                               tEplPdoCbCopyPdo pfnPdokCbPostCopyRPdo_p);
