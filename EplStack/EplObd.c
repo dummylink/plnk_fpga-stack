@@ -99,6 +99,7 @@ INSTANCE_TYPE_BEGIN
     STATIC      tEplObdInitParam               INST_FAR    m_ObdInitParam;
     STATIC      tEplObdStoreLoadObjCallback    INST_NEAR   m_fpStoreLoadObjCallback;
     STATIC      tEplObdEntry                   INST_NEAR   m_DefaultObdEntry;
+    STATIC      tEplObdParam                   INST_FAR    m_SaveObdParam;
 
 INSTANCE_TYPE_END
 
@@ -294,6 +295,9 @@ tEplKernel Ret;
 
     // clear default OD entry
     EPL_MEMSET(&EPL_MCO_GLB_VAR (m_DefaultObdEntry), 0, sizeof (EPL_MCO_GLB_VAR (m_DefaultObdEntry)));
+
+    // clear OD handle storage
+    EPL_MEMSET(&EPL_MCO_GLB_VAR (m_SaveObdParam), 0, sizeof (EPL_MCO_GLB_VAR (m_SaveObdParam)));
 
     // sign instance as used
     EPL_MCO_WRITE_INSTANCE_STATE (kStateUsed);
@@ -1706,6 +1710,81 @@ EPLDLLEXPORT tEplKernel PUBLIC EplObdSetDefaultObdCallback (EPL_MCO_DECL_INSTANC
 
 }
 
+
+//---------------------------------------------------------------------------
+//
+// Function:    EplObdSave0bdAccHdl()
+//
+// Description: function stores an OBD access handle and returns the storage
+//              memory address to an user argument. Only one element can be
+//              stored.
+//
+// Parameters:  ppStoreHdlPtr  [OUT] =  pointer to address were the OBD handle
+//                                      memory address shall be stored
+//              pObdAccParam_p [IN] =   OBD access handle
+//
+// Return:      tEplKernel
+//
+// State:
+//
+//---------------------------------------------------------------------------
+
+EPLDLLEXPORT tEplKernel PUBLIC EplObdSave0bdAccHdl(tEplObdParam ** ppStoreHdlPtr_p,
+                                                   tEplObdParam* pObdAccParam_p)
+{
+    if (*ppStoreHdlPtr_p != NULL)
+    { // zero-initialized pointer required, otherwise its assumed that
+      // the pointer is already in use
+        return kEplInvalidParam;
+    }
+
+    // verify if storage is in use
+    if (EPL_MCO_GLB_VAR (m_SaveObdParam).m_uiIndex == 0)
+    {
+        *ppStoreHdlPtr_p = &EPL_MCO_GLB_VAR (m_SaveObdParam);
+    }
+    else
+    {   // storage is not empty
+        pObdAccParam_p->m_dwAbortCode = EPL_SDOAC_OUT_OF_MEMORY;
+        return kEplObdOutOfMemory;
+    }
+
+    EPL_MEMCPY(&EPL_MCO_GLB_VAR (m_SaveObdParam), pObdAccParam_p, sizeof (tEplObdParam));
+
+    return kEplSuccessful;
+}
+
+
+//---------------------------------------------------------------------------
+//
+// Function:    EplObdDelete0bdAccHdl()
+//
+// Description: function resets a saved OBD access handle
+//              and set memory pointer to 0.
+//
+// Parameters:  ppHdlPtr_p
+//
+// Return:      tEplKernel
+//
+// State:
+//
+//---------------------------------------------------------------------------
+
+EPLDLLEXPORT tEplKernel PUBLIC EplObdDelete0bdAccHdl(tEplObdParam ** ppHdlPtr_p)
+{
+    if ((*ppHdlPtr_p == NULL)                             ||
+        (&EPL_MCO_GLB_VAR (m_SaveObdParam) != *ppHdlPtr_p)  )
+    { // only one ObdParam (unique address) can be saved and deleted
+        return kEplInvalidOperation;
+    }
+
+    // clear OD handle storage
+    EPL_MEMSET(&EPL_MCO_GLB_VAR (m_SaveObdParam), 0, sizeof (EPL_MCO_GLB_VAR (m_SaveObdParam)));
+
+    *ppHdlPtr_p = NULL;
+
+    return kEplSuccessful;
+}
 
 
 //=========================================================================//

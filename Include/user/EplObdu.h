@@ -190,6 +190,10 @@ EPLDLLEXPORT tEplKernel PUBLIC EplObduSearchVarEntry (EPL_MCO_DECL_INSTANCE_PTR_
 
 #define EplObduSetDefaultObdCallback EplObdSetDefaultObdCallback
 
+#define EplObduSave0bdAccHdl    EplObdSave0bdAccHdl
+
+#define EplObduDelete0bdAccHdl  EplObdDelete0bdAccHdl
+
 #endif // #if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_OBDU)) != 0)
 
 #endif  // #ifndef _EPLOBDU_H_
