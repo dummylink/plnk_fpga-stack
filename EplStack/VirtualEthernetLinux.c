@@ -260,7 +260,7 @@ static void VEthTimeout(struct net_device *pNetDevice_p)
 
 
 
-static tEplKernel VEthRecvFrame(tEplFrameInfo * pFrameInfo_p)
+static tEplKernel VEthRecvFrame(tEplFrameInfo * pFrameInfo_p, tEdrvReleaseRxBuffer* pReleaseRxBuffer_p)
 {
 tEplKernel  Ret = kEplSuccessful;
     struct net_device* pNetDevice = pVEthNetDevice_g;
