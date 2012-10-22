@@ -962,6 +962,12 @@
     #elif defined (__NIOS2__)
         #define TARGET_SYSTEM       _NO_OS_
         #define DEV_SYSTEM          _DEV_NIOS2_
+        #if !defined(__OPTIMIZE__)
+               //restore default: disable inlining if optimization is disabled
+               #define INLINE_FUNCTION
+               #undef  INLINE_ENABLED
+               #undef  INLINE_FUNCTION_DEF
+        #endif
         #define ALT_INTERNAL_RAM    __attribute__((section(".tc_i_mem_pcp")))
         #ifdef NDEBUG
             #if (ALT_TCIMEM_SIZE >= 2048)
