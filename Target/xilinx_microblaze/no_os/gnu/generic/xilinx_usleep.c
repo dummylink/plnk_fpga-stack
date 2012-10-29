@@ -68,9 +68,10 @@
 
 #include "xilinx_usleep.h"
 
+#include "xil_types.h"
 #include "xparameters.h"
 
-void usleep(DWORD useconds) __attribute__((section(".local_memory")));
+void usleep(u32 useconds) __attribute__((section(".local_memory")));
 
 #ifdef XPAR_MICROBLAZE_CORE_CLOCK_FREQ_HZ
     #define CPU_SPEED_TICKS XPAR_MICROBLAZE_CORE_CLOCK_FREQ_HZ
@@ -80,10 +81,10 @@ void usleep(DWORD useconds) __attribute__((section(".local_memory")));
 
 #define CPU_SPEED_MHZ (CPU_SPEED_TICKS/1000000)
 
-void usleep(DWORD useconds)
+void usleep(u32 useconds)
 {
     /* The small loop always takes 1us -> it is adjusted to need 10 iterations with 50Mhz */
-    WORD small_loop = 10 * (CPU_SPEED_MHZ/50);
+    u16 small_loop = 10 * (CPU_SPEED_MHZ/50);
 
     asm
     (
