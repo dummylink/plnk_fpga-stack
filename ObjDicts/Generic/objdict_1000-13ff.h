@@ -24,7 +24,7 @@
 
         // Object 1008h: NMT_ManufactDevName_VS
         EPL_OBD_BEGIN_INDEX_RAM(0x1008, 0x01, NULL)
-           EPL_OBD_SUBINDEX_RAM_VSTRING(0x1008, 0x00, kEplObdAccR, device_name, EPL_OBD_MAX_STRING_SIZE, CONFIG_IDENT_DEVICE_NAME)
+           EPL_OBD_SUBINDEX_RAM_VSTRING(0x1008, 0x00, kEplObdAccR, device_name, EPL_OBD_MAX_STRING_SIZE, EPL_MANUFACT_DEVICE_NAME)
         EPL_OBD_END_INDEX(0x1008)
 
         // Object 1009h: NMT_ManufactHwVers_VS

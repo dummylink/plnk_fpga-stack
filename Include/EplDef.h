@@ -237,6 +237,10 @@
 #define EPL_NMTMNU_PRC_NODE_ADD_MAX_NUM EPL_D_NMT_MaxCNNumber_U8
 #endif
 
+#ifndef EPL_MANUFACT_DEVICE_NAME
+#define EPL_MANUFACT_DEVICE_NAME    "openPOWERLINK device"
+#endif
+
 // defines for EPL API layer static process image
 #ifndef EPL_API_PROCESS_IMAGE_SIZE_IN
 #define EPL_API_PROCESS_IMAGE_SIZE_IN   0
