@@ -3147,7 +3147,6 @@ tEplKernel              Ret;
              && (pObdParam_p->m_uiIndex != 0x5020)
 #endif //CONFIG_USE_SDC_OBJECTS
 #endif // CONFIG_MAN_DEV_OBJECTS_PRESET_AT_PCP
-             && (pObdParam_p->m_uiIndex != 0x5011)
             )
         {
             // prepare for default OBD access
