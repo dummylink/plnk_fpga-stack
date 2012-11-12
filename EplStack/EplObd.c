@@ -1312,6 +1312,12 @@ tEplObdSize                     OrgSegmentSize;
     {
         goto Exit;
     }
+    else
+    {
+        // kEplObdSegmentReturned is OK for local access, but
+        // for abdopted access it should cause an exit (not an abort!?)
+        Ret = kEplSuccessful;
+    }
 
     // check if numerical type
     switch (pObdParam_p->m_Type)
@@ -2754,6 +2760,7 @@ BOOL                    fEntryNumerical;
     }
     else if (pObdParam_p->m_SegmentSize < pObdParam_p->m_ObjSize)
     {   // segment offset == 0 and segment size is less than object size
+        pObdParam_p->m_TransferSize = ObdSize;  // prepare segmented read size
         Ret = kEplObdSegmentReturned;
     }
     else
