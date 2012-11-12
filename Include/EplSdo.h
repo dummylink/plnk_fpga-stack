@@ -81,8 +81,8 @@
 // const defines
 //---------------------------------------------------------------------------
 // global defines
-#ifndef EPL_SDO_MAX_SEGMENT_SIZE
-#define EPL_SDO_MAX_SEGMENT_SIZE     256
+#ifndef EPL_SDO_MAX_TX_SEGMENT_SIZE
+#define EPL_SDO_MAX_TX_SEGMENT_SIZE     258
 #endif
 
 // handle between Protocol Abstraction Layer and asynchronous SDO Sequence Layer
@@ -104,11 +104,12 @@
 #define EPL_SEQ_NUM_MASK            0xFC
 
 // size for send buffer and history
-#define EPL_MAX_SDO_FRAME_SIZE      EPL_C_IP_MIN_MTU
+#define EPL_SDO_MAX_TX_FRAME_SIZE      (EPL_SDO_MAX_TX_SEGMENT_SIZE + 42)
+
 // size for receive frame
 // -> needed because SND-Kit sends up to 1518 Byte
 //    without Sdo-Command: Maximum Segment Size
-#define EPL_MAX_SDO_REC_FRAME_SIZE  EPL_C_IP_MAX_MTU
+#define EPL_SDO_MAX_REC_FRAME_SIZE  EPL_C_IP_MAX_MTU
 
 //---------------------------------------------------------------------------
 // typedef

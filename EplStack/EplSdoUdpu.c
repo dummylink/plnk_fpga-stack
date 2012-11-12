@@ -738,7 +738,7 @@ struct sockaddr_in  RemoteAddr;
 int                 iError;
 int                 iCount;
 int                 iFreeEntry;
-BYTE                abBuffer[EPL_MAX_SDO_REC_FRAME_SIZE];
+BYTE                abBuffer[EPL_SDO_MAX_REC_FRAME_SIZE];
 unsigned int        uiSize;
 tEplSdoConHdl       SdoConHdl;
 

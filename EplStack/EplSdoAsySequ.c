@@ -108,7 +108,7 @@
 #define EPL_SEQ_HEADER_SIZE         4
 
 // buffersize for one frame in history
-#define EPL_SEQ_HISTROY_FRAME_SIZE  EPL_MAX_SDO_FRAME_SIZE
+#define EPL_SEQ_HISTROY_FRAME_SIZE  EPL_SDO_MAX_TX_FRAME_SIZE
 
 // mask to get scon and rcon
 #define EPL_ASY_SDO_CON_MASK        0x03
