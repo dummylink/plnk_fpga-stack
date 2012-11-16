@@ -446,10 +446,9 @@ typedef struct _tEplObdParam tEplObdParam;
 typedef enum
 {
     kEplObdDefAccHdlEmpty               =   0x00, // new handle can be stored
-    kEplObdDefAccHdlWaitProcessingInit  =   0x01, // handle waits to be processed
+    kEplObdDefAccHdlWaitProcessingInit  =   0x01, // handle waits to be processed or queued
     kEplObdDefAccHdlWaitProcessingQueue =   0x02, // handle waits to be processed
-    kEplObdDefAccHdlInUse               =   0x03, // handle is currently processed
-    kEplObdDefAccHdlProcessingFinished  =   0x04, // processing is finished
+    kEplObdDefAccHdlProcessing          =   0x03, // handle is currently processed
     kEplObdDefAccHdlError               =   0x05, // error happened while processing
 
 } tEplObdAccStatus;
