@@ -92,6 +92,8 @@
 #define EPL_OBD_NODE_ID_SUBINDEX            0x01
 // default subindex for NodeIDByHW_BOOL
 #define EPL_OBD_NODE_ID_HWBOOL_SUBINDEX     0x02
+// maximum OD data to be buffered for one segmented access
+#define EPL_OBD_ACC_MAX_PAYLOAD             1458
 
 // ============================================================================
 // enums
@@ -450,15 +452,7 @@ typedef enum
     kEplObdDefAccHdlProcessingFinished  =   0x04, // processing is finished
     kEplObdDefAccHdlError               =   0x05, // error happened while processing
 
-} tEplObdDefAccStatus;
-
-typedef struct sDefObdAccHdl
-{
-    tEplObdDefAccStatus m_Status;   // status of OBD access
-    tEplObdParam * m_pObdParam;     // pointer to OBD access handle
-    WORD           m_wSeqCnt;     // counter of subsequent OBD accesses to one object
-
-} tDefObdAccHdl;
+} tEplObdAccStatus;
 
 typedef tEplKernel (PUBLIC ROM* tEplObdCbAccessFinished) (/*EPL_MCO_DECL_INSTANCE_HDL_*/
     tEplObdParam MEM* pParam_p);
@@ -511,7 +505,16 @@ typedef struct
 // allways  pointer
 typedef tEplObdEntry * tEplObdEntryPtr;
 
+// OBD access history entry
+typedef struct sObdAccHstryEntry
+{
+    tEplObdAccStatus m_Status;               // status of OBD access
+    tEplObdParam     m_ObdParam;             // OBD access handle
+    BYTE m_aObdData[EPL_OBD_ACC_MAX_PAYLOAD];   // OBD access data
+    WORD m_wSeqCnt;     // counter of subsequent OBD accesses to one object
+    WORD m_wComConIdx;  // communication connection index for interfaces
 
+} tObdAccHstryEntry;
 
 // -------------------------------------------------------------------------
 // structur to initialize OBD module

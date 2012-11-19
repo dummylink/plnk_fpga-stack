@@ -158,7 +158,6 @@ typedef struct
 #ifdef EPL_MODULE_API_PDI
     // call back function for PDI PDO configuration
     tEplPdouCbCfgPdi  m_pfnPdouCbConfigPdi;
-    tEplObdParam *    m_pObdParamConHdlPdi;
 #endif
 
     BOOL    m_fAllocated;
@@ -577,11 +576,7 @@ unsigned int        uiCurPdoSize;
                 // signal error
                 if (pParam_p->m_dwAbortCode == 0)
                 {
-                    EplPdouInstance_g.m_pObdParamConHdlPdi->m_dwAbortCode = EPL_SDOAC_GENERAL_ERROR;
-                }
-                else
-                {
-                    EplPdouInstance_g.m_pObdParamConHdlPdi->m_dwAbortCode = pParam_p->m_dwAbortCode;
+                    pParam_p->m_dwAbortCode = EPL_SDOAC_GENERAL_ERROR;
                 }
 
                 // error will be processed and handle will be deleted within the PDI module
