@@ -93,8 +93,6 @@
 // local types
 //---------------------------------------------------------------------------
 
-typedef tEplKernel (* tEplVethCbRcv) (tEplFrame *pEthData, WORD wEthDataSize);
-
 typedef struct _tVEthStatistics
 {
     DWORD                  m_dwMsgfree;
@@ -145,7 +143,7 @@ Address Resolution Protocol (request)
     Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
     Target IP address: 192.168.100.1 (192.168.100.1)
 */
-BYTE abNonEplData[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+static BYTE abNonEplData[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         0x0, 0x80, 0x48, 0x61, 0xe1, 0x5e,
         0x8, 0x6,
         0x0, 0x1,
