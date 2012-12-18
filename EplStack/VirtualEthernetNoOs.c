@@ -63,6 +63,7 @@
 #include "kernel/VirtualEthernet.h"
 #include "kernel/EplDllk.h"
 #include "kernel/EplDllkCal.h"
+#include "user/EplNmtu.h"       //TODO: no clean user/kernel separation!
 #include "VirtualEthernetApi.h"
 
 #if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
@@ -103,7 +104,6 @@ typedef struct _tVEthStatistics
 
 typedef struct _tVEthInstance
 {
-    // auto-response Tx buffers
     tEdrvRxBuffer          m_aVEthRxBuffer[EPL_VETH_NUM_RX_BUFFERS];
     BYTE                   m_bVethRxBuffWritePos;
     BYTE                   m_bVethRxBuffReadPos;
@@ -291,9 +291,10 @@ tEplKernel PUBLIC VEthSetDefaultGateway(DWORD dwDefaultGateway_p)
 //
 // Parameters:      void
 //
-// Returns:         kEplInvalidParam if the maximum MTU is reached
-//                  kEplDllAsyncTxBufferFull if the internal buffer is full
-//                  kEplSuccessful if the message is sent
+// Returns:         kEplInvalidParam - maximum MTU is reached
+//                  kEplDllAsyncTxBuffer - internal buffer is full
+//                  kEplInvalidOperation - Send not allowed in this state
+//                  kEplSuccessful - message sent successfully
 //
 // State:
 //
@@ -400,9 +401,10 @@ Exit:
 // Parameters:      pData_p = point to packet buffer
 //                  wDataSize = size of packet
 //
-// Returns:         kEplInvalidParam if the maximum MTU is reached
-//                  kEplDllAsyncTxBufferFull if the internal buffer is full
-//                  kEplSuccessful if the message is sent
+// Returns:         kEplInvalidParam - maximum MTU is reached
+//                  kEplDllAsyncTxBuffer - internal buffer is full
+//                  kEplInvalidOperation - Send not allowed in this state
+//                  kEplSuccessful - message sent successfully
 //
 // State:
 //
@@ -411,6 +413,17 @@ tEplKernel PUBLIC VEthApiXmit(BYTE *pData_p, WORD wDataSize)
 {
     tEplKernel      Ret = kEplSuccessful;
     tEplFrameInfo   FrameInfo;
+    tEplNmtState    NmtState;
+
+    //check POWERLINK state
+    NmtState = EplNmtuGetNmtState();
+    if(NmtState <= kEplNmtCsNotActive || NmtState == kEplNmtMsNotActive)
+    {
+        Ret =  kEplInvalidOperation;
+        EPL_DBGLVL_VETH_TRACE1("VEthXmit: Error while transmitting! Invalid "
+                "state: 0x%x!\n", NmtState);
+        goto Exit;
+    }
 
     //check MTU
     if(wDataSize > VEthInstance_g.m_wMtu)
