@@ -87,8 +87,7 @@
 #define EPL_DLLK_FILTER_ASND          (EPL_DLLK_FILTER_SOC + 1)
 #define EPL_DLLK_FILTER_PRES          (EPL_DLLK_FILTER_ASND + 1)
 
-//if virtual ethernet driver is defined for openmac
-#ifdef EDRV_VETH_OPENMAC
+#if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
   #if EPL_DLL_PRES_FILTER_COUNT < 0
     #define EPL_DLLK_FILTER_VETH_OPENMAC_UNICAST      (EPL_DLLK_FILTER_PRES + 1)
   #else
@@ -103,7 +102,7 @@
   #else
     #define EPL_DLLK_FILTER_COUNT       (EPL_DLLK_FILTER_PRES + EPL_DLL_PRES_FILTER_COUNT)
   #endif
-#endif //EDRV_VETH_OPENMAC
+#endif
 
 //---------------------------------------------------------------------------
 // typedef

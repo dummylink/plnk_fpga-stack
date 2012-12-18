@@ -1956,30 +1956,28 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         }
 #endif
 
-#ifdef EDRV_VETH_OPENMAC
-    //define the Veth filters for openmac
-
-    //Add filter for Unicast address
+#if(((EPL_MODULE_INTEGRATION) & (EPL_MODULE_VETH)) != 0)
+    //Add veth filter for Unicast address
     EPL_MEMSET(EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_UNICAST].m_abFilterMask, 0xFF, 6);
 
-    EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_UNICAST].m_pTxBuffer = NULL;  // Auto response
+    EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_UNICAST].m_pTxBuffer = NULL;  // No auto response
 
     EPL_MEMCPY(EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_UNICAST].m_abFilterValue,
             &EplDllkInstance_g.m_be_abLocalMac[0], 6);
 
     EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_UNICAST].m_fEnable = TRUE;
 
-    //Add filter for Broadcast address
+    //Add veth filter for Broadcast address
     EPL_MEMSET(EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_abFilterMask, 0xFF, 6);
 
-    EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_pTxBuffer = NULL;  // Auto response
+    EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_pTxBuffer = NULL;  // No auto response
 
     EPL_MEMCPY(EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_abFilterValue,
             EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_abFilterMask,
             sizeof(EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_abFilterValue));
 
     EplDllkInstance_g.m_aFilter[EPL_DLLK_FILTER_VETH_OPENMAC_BROADCAST].m_fEnable = TRUE;
-#endif //EDRV_VETH_OPENMAC
+#endif
 
 #if (EPL_DLL_PROCESS_SYNC == EPL_DLL_PROCESS_SYNC_ON_TIMER)
         Ret = EplTimerSynckSetCycleLenUs(EplDllkInstance_g.m_DllConfigParam.m_dwCycleLen);
