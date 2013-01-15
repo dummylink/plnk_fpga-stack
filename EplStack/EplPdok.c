@@ -958,7 +958,7 @@ WORD            wSize;
     pbPayload_p += uiByteOffset;
     pVar = EPL_PDO_MAPPOBJECT_GET_VAR(pMappObject_p);
 
-    if(aSizeList[EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p)] > EPL_PDO_COMMUNICATION_PROFILE_START)
+    if(EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p) > EPL_PDO_COMMUNICATION_PROFILE_START)
     {
         wSize = EPL_PDO_MAPPOBJECT_GET_BYTESIZE(pMappObject_p);
     }
@@ -1115,7 +1115,7 @@ WORD            wSize;
     pbPayload_p += uiByteOffset;
     pVar = EPL_PDO_MAPPOBJECT_GET_VAR(pMappObject_p);
 
-    if(aSizeList[EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p)] > EPL_PDO_COMMUNICATION_PROFILE_START)
+    if(EPL_PDO_MAPPOBJECT_GET_TYPE(pMappObject_p) > EPL_PDO_COMMUNICATION_PROFILE_START)
     {
         wSize = EPL_PDO_MAPPOBJECT_GET_BYTESIZE(pMappObject_p);
     }
