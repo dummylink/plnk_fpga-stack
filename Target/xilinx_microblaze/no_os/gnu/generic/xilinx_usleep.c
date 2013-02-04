@@ -88,16 +88,16 @@ void usleep(u32 useconds)
 
     asm
     (
-      "       addik r20, r0, 1         \n\t"    // fill r20 with decrement value
-      "outer_loop: rsub %0, r20, %0    \n\t"
-      "inner_loop: rsub %1, r20, %1    \n\t"    //1 cycle
+      "       addik r21, r0, 1         \n\t"    // fill r21 with decrement value
+      "outer_loop: rsub %0, r21, %0    \n\t"
+      "inner_loop: rsub %1, r21, %1    \n\t"    //1 cycle
       "       nop                      \n\t"    //1 cycle
       "       bnei %1, inner_loop      \n\t"    //3 cycles
       "       add %1, r0, %2           \n\t"
       "       bnei %0, outer_loop      \n\t"
           : /* no output registers */
           : "r"(useconds), "r"(small_loop), "r"(small_loop)
-          : "r20"
+          : "r21"
     );
 }
 
